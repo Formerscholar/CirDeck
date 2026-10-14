@@ -15,8 +15,7 @@
         MouseLeftButtonUp="OnMouseUp"
         MouseRightButtonUp="OnBackgroundMenu">
     <Grid>
-        <Image x:Name="Plate" Stretch="UniformToFill" IsHitTestVisible="False"/>
-        <Border Background="#D6FFFFFF" IsHitTestVisible="False"/>
+        <Border Background="#33FFFFFF" BorderBrush="#66FFFFFF" BorderThickness="1" IsHitTestVisible="False"/>
         <Canvas x:Name="Surface"/>
     </Grid>
 </Window>

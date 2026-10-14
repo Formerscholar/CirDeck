@@ -211,11 +211,11 @@ public partial class LaunchpadWindow : Window
             var active = i == _page;
             var dot = new Border
             {
-                Width = active ? 18 : 6,
-                Height = 6,
+                Width = active ? 7 : 5,
+                Height = 5,
                 CornerRadius = new CornerRadius(3),
-                Margin = new Thickness(3.5, 0, 3.5, 0),
-                Background = new SolidColorBrush(active ? Colors.White : Color.FromArgb(96, 255, 255, 255)),
+                Margin = new Thickness(4, 0, 4, 0),
+                Background = new SolidColorBrush(active ? Color.FromArgb(230, 255, 255, 255) : Color.FromArgb(70, 255, 255, 255)),
                 Cursor = Cursors.Hand
             };
             dot.MouseLeftButtonUp += (_, _) =>

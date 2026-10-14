@@ -73,7 +73,6 @@ public partial class DockWindow : Window
 
         Show();
         Place();
-        Plate.Source = DesktopBackdrop.Current;
         WindowChrome.KeepAbove(new WindowInteropHelper(this).Handle);
     }
 
@@ -128,14 +127,14 @@ public partial class DockWindow : Window
         }
 
         var settings = _session.Settings;
-        const double icon = 48;
-        const double spacing = 14;
-        const double padX = 22;
-        const double padY = 14;
-        var magnify = settings.DockMagnify ? 1.55 : 1;
+        const double icon = 56;
+        const double spacing = 12;
+        const double padX = 16;
+        const double padY = 10;
+        var magnify = settings.DockMagnify ? 1.28 : 1;
         var request = new DockRequest(_entries.Count, icon, spacing, padX, padY, magnify, double.NaN, settings.DockMagnify);
-        Width = Math.Max(120, DockGeometry.ReserveWidth(_entries.Count, icon, spacing, padX, magnify));
-        Height = padY * 2 + (icon + 12) * magnify;
+        Width = Math.Max(160, DockGeometry.ReserveWidth(_entries.Count, icon, spacing, padX, magnify));
+        Height = padY * 2 + icon * magnify;
         _frame = DockGeometry.Place(request, _scale);
         ApplyFrame();
         if (IsVisible)
@@ -146,7 +145,7 @@ public partial class DockWindow : Window
 
     private FrameworkElement CreateVisual(AppEntry entry)
     {
-        var size = 48d;
+        var size = 56d;
         var image = new Image
         {
             Width = size - 8,
@@ -170,7 +169,7 @@ public partial class DockWindow : Window
         {
             Width = 4,
             Height = 4,
-            Fill = new SolidColorBrush(Color.FromRgb(190, 190, 196)),
+            Fill = Brushes.White,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Bottom,
             Margin = new Thickness(0, 0, 0, 1),
@@ -208,11 +207,11 @@ public partial class DockWindow : Window
     {
         return new DockRequest(
             _entries.Count,
-            48,
-            14,
-            22,
-            14,
-            _session.Settings.DockMagnify ? 1.55 : 1,
+            56,
+            12,
+            16,
+            10,
+            _session.Settings.DockMagnify ? 1.28 : 1,
             pointerX,
             _session.Settings.DockMagnify);
     }
@@ -356,7 +355,7 @@ public partial class DockWindow : Window
 
     private void ApplyFrame()
     {
-        var icon = 48d;
+        var icon = 56d;
         for (var i = 0; i < _frame.Poses.Count && i < _transforms.Count; i++)
         {
             var pose = _frame.Poses[i];

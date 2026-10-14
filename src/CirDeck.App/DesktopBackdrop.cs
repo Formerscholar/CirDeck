@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
@@ -20,15 +21,29 @@ internal static class DesktopBackdrop
 
             using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             var frame = BitmapDecoder.Create(stream, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.OnLoad).Frames[0];
-            const int width = 960;
+            frame.Freeze();
+            const int width = 1400;
             var height = Math.Max(1, (int)Math.Round(frame.PixelHeight * (width / (double)Math.Max(1, frame.PixelWidth))));
-            var scaled = new TransformedBitmap(frame, new ScaleTransform(width / (double)frame.PixelWidth, height / (double)frame.PixelHeight));
-            var formatted = new FormatConvertedBitmap(scaled, PixelFormats.Bgra32, null, 0);
-            var stride = width * 4;
-            var pixels = new byte[stride * height];
-            formatted.CopyPixels(pixels, stride, 0);
-            BoxBlur(pixels, width, height, 24);
-            var result = BitmapSource.Create(width, height, 96, 96, PixelFormats.Bgra32, null, pixels, stride);
+            const int bleed = 120;
+            var visual = new System.Windows.Controls.Image
+            {
+                Source = frame,
+                Width = width + bleed * 2,
+                Height = height + bleed * 2,
+                Stretch = Stretch.UniformToFill,
+                Effect = new System.Windows.Media.Effects.BlurEffect
+                {
+                    Radius = 48,
+                    KernelType = System.Windows.Media.Effects.KernelType.Gaussian,
+                    RenderingBias = System.Windows.Media.Effects.RenderingBias.Quality
+                }
+            };
+            var big = new Size(width + bleed * 2, height + bleed * 2);
+            visual.Measure(big);
+            visual.Arrange(new Rect(big));
+            var full = new RenderTargetBitmap((int)big.Width, (int)big.Height, 96, 96, PixelFormats.Pbgra32);
+            full.Render(visual);
+            var result = new CroppedBitmap(full, new Int32Rect(bleed, bleed, width, height));
             result.Freeze();
             Current = result;
             return result;
