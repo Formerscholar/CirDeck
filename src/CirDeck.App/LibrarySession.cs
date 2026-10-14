@@ -153,6 +153,20 @@ public sealed class LibrarySession
 
     public void MoveTile(string fromKey, string toKey)
     {
+        var shown = Board();
+        if (string.IsNullOrEmpty(OpenFolderId))
+        {
+            Library.Order = shown.Select(tile => tile.Key).ToList();
+        }
+        else
+        {
+            var folder = Library.Folders.FirstOrDefault(item => item.Id == OpenFolderId);
+            if (folder != null)
+            {
+                folder.Targets = shown.Select(tile => tile.Key).ToList();
+            }
+        }
+
         LibraryBoard.Move(Library, fromKey, toKey, OpenFolderId);
         SaveLibrary();
     }

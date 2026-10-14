@@ -18,7 +18,7 @@ public partial class LaunchpadWindow : Window
     private readonly Dictionary<string, TileModel> _tiles = new(StringComparer.OrdinalIgnoreCase);
     private IReadOnlyList<LaunchTile> _results = Array.Empty<LaunchTile>();
     private int _page;
-    private int _selected;
+    private int _selected = -1;
     private bool _allowClose;
     private Point _pressPoint;
     private bool _dragged;
@@ -112,10 +112,12 @@ public partial class LaunchpadWindow : Window
 
     private void ApplyColumns()
     {
+        var columns = _session.Settings.Columns;
         var factory = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.Primitives.UniformGrid));
-        factory.SetValue(System.Windows.Controls.Primitives.UniformGrid.ColumnsProperty, _session.Settings.Columns);
+        factory.SetValue(System.Windows.Controls.Primitives.UniformGrid.ColumnsProperty, columns);
         Tiles.ItemsPanel = new ItemsPanelTemplate(factory);
-        Tiles.MaxWidth = _session.Settings.Columns * 108;
+        Tiles.Width = columns * 120;
+        Tiles.HorizontalAlignment = HorizontalAlignment.Center;
     }
 
     private void Refresh()
@@ -130,7 +132,14 @@ public partial class LaunchpadWindow : Window
         _page = PageLayout.Clamp(_page, pages);
         var start = _page * pageSize;
         var visible = Math.Max(0, Math.Min(pageSize, _results.Count - start));
-        _selected = visible == 0 ? 0 : Math.Clamp(_selected, 0, visible - 1);
+        if (visible == 0)
+        {
+            _selected = -1;
+        }
+        else if (_selected >= visible)
+        {
+            _selected = visible - 1;
+        }
         var slice = new List<TileModel>();
         var end = Math.Min(_results.Count, start + pageSize);
         for (var i = start; i < end; i++)
@@ -149,7 +158,7 @@ public partial class LaunchpadWindow : Window
                 LoadIcon(tile);
             }
 
-            tile.Selected = slice.Count == _selected;
+            tile.Selected = _selected >= 0 && slice.Count == _selected;
             slice.Add(tile);
         }
 
@@ -280,7 +289,8 @@ public partial class LaunchpadWindow : Window
         }
 
         var pageSize = PageLayout.PageSize(_session.Settings.Columns, _session.Settings.Rows);
-        var index = _page * pageSize + _selected + delta;
+        var origin = _selected < 0 ? (_page * pageSize) : (_page * pageSize + _selected);
+        var index = _selected < 0 ? (delta > 0 ? origin : origin + pageSize - 1) : origin + delta;
         if (index < 0)
         {
             index = 0;
@@ -336,6 +346,41 @@ public partial class LaunchpadWindow : Window
         }
     }
 
+    private void OnPointerDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource is DependencyObject source && IsInside(source, typeof(TextBox)))
+        {
+            return;
+        }
+
+        _pressPoint = e.GetPosition(this);
+        _dragged = false;
+        _pressed = TileUnder(e.GetPosition(this));
+        Mouse.Capture(this);
+    }
+
+    private void OnPointerMove(object sender, MouseEventArgs e)
+    {
+        if (!IsMouseCaptured || e.LeftButton != MouseButtonState.Pressed)
+        {
+            return;
+        }
+
+        var point = e.GetPosition(this);
+        var dx = point.X - _pressPoint.X;
+        var dy = point.Y - _pressPoint.Y;
+        if (Math.Abs(dx) < 8 && Math.Abs(dy) < 8)
+        {
+            return;
+        }
+
+        _dragged = true;
+        if (Math.Abs(dx) > Math.Abs(dy))
+        {
+            Tiles.RenderTransform = new TranslateTransform(Math.Clamp(dx * 0.35, -180, 180), 0);
+        }
+    }
+
     private void OnTileDown(object sender, MouseButtonEventArgs e)
     {
         if (sender is Button button && button.DataContext is TileModel tile)
@@ -348,16 +393,6 @@ public partial class LaunchpadWindow : Window
 
     private void OnTileMove(object sender, MouseEventArgs e)
     {
-        if (_pressed == null || e.LeftButton != MouseButtonState.Pressed)
-        {
-            return;
-        }
-
-        var point = e.GetPosition(this);
-        if (Math.Abs(point.X - _pressPoint.X) + Math.Abs(point.Y - _pressPoint.Y) > 12)
-        {
-            _dragged = true;
-        }
     }
 
     private void OnTileMenu(object sender, MouseButtonEventArgs e)
@@ -509,6 +544,11 @@ public partial class LaunchpadWindow : Window
     private void LaunchSelected()
     {
         var pageSize = PageLayout.PageSize(_session.Settings.Columns, _session.Settings.Rows);
+        if (_selected < 0)
+        {
+            return;
+        }
+
         var index = _page * pageSize + _selected;
         if (index < 0 || index >= _results.Count)
         {
@@ -531,24 +571,62 @@ public partial class LaunchpadWindow : Window
 
     private void OnTileUp(object sender, MouseButtonEventArgs e)
     {
+        var point = e.GetPosition(this);
+        var dx = point.X - _pressPoint.X;
+        var dy = point.Y - _pressPoint.Y;
+        var horizontal = _dragged && Math.Abs(dx) > 72 && Math.Abs(dx) > Math.Abs(dy);
+        Tiles.RenderTransform = Transform.Identity;
+        Mouse.Capture(null);
+
+        if (horizontal && string.IsNullOrWhiteSpace(SearchBox.Text))
+        {
+            var pages = PageLayout.PageCount(_results.Count, PageLayout.PageSize(_session.Settings.Columns, _session.Settings.Rows));
+            _page = PageLayout.Clamp(_page + (dx < 0 ? 1 : -1), pages);
+            _selected = -1;
+            _pressed = null;
+            Refresh();
+            return;
+        }
+
         if (!_dragged || _pressed == null || !string.IsNullOrWhiteSpace(SearchBox.Text))
         {
             _pressed = null;
             return;
         }
 
-        var element = InputHitTest(e.GetPosition(this)) as DependencyObject;
-        while (element != null && element is not Button)
-        {
-            element = VisualTreeHelper.GetParent(element);
-        }
-
-        if (element is Button button && button.DataContext is TileModel target && !string.Equals(target.Tile.Key, _pressed.Tile.Key, StringComparison.OrdinalIgnoreCase))
+        var target = TileUnder(point);
+        if (target != null && !string.Equals(target.Tile.Key, _pressed.Tile.Key, StringComparison.OrdinalIgnoreCase))
         {
             _session.MoveTile(_pressed.Tile.Key, target.Tile.Key);
         }
 
         _pressed = null;
+    }
+
+    private TileModel? TileUnder(Point point)
+    {
+        var element = InputHitTest(point) as DependencyObject;
+        while (element != null && element is not Button)
+        {
+            element = VisualTreeHelper.GetParent(element);
+        }
+
+        return element is Button button ? button.DataContext as TileModel : null;
+    }
+
+    private static bool IsInside(DependencyObject source, Type type)
+    {
+        while (source != null)
+        {
+            if (type.IsInstanceOfType(source))
+            {
+                return true;
+            }
+
+            source = VisualTreeHelper.GetParent(source);
+        }
+
+        return false;
     }
 
     private void OnIconReady(string path, string png)

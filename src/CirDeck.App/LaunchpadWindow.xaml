@@ -13,11 +13,13 @@
         TextOptions.TextRenderingMode="ClearType"
         PreviewKeyDown="OnPreviewKeyDown"
         MouseWheel="OnMouseWheel"
+        PreviewMouseLeftButtonDown="OnPointerDown"
+        PreviewMouseMove="OnPointerMove"
         PreviewMouseLeftButtonUp="OnTileUp">
     <Grid>
         <Image x:Name="Backdrop" Stretch="UniformToFill" IsHitTestVisible="False"/>
         <Border Background="#14000000" IsHitTestVisible="False"/>
-        <Grid Margin="0,0,0,96">
+        <Grid Margin="0,0,0,132">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -72,14 +74,14 @@
                 <ItemsControl x:Name="Tiles" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,12,0,0">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Button Style="{StaticResource TileButton}" Width="104" Click="OnTileClick" PreviewMouseRightButtonUp="OnTileMenu" PreviewMouseLeftButtonDown="OnTileDown" PreviewMouseMove="OnTileMove">
+                            <Button Style="{StaticResource TileButton}" Width="120" Height="108" Click="OnTileClick" PreviewMouseRightButtonUp="OnTileMenu" PreviewMouseLeftButtonDown="OnTileDown" PreviewMouseMove="OnTileMove">
                                 <StackPanel>
-                                    <Image Width="54" Height="54" Source="{Binding Icon}" RenderOptions.BitmapScalingMode="HighQuality">
+                                    <Image Width="58" Height="58" Source="{Binding Icon}" RenderOptions.BitmapScalingMode="HighQuality" HorizontalAlignment="Center">
                                         <Image.Effect>
-                                            <DropShadowEffect BlurRadius="10" ShadowDepth="1" Direction="270" Opacity="0.22" Color="Black"/>
+                                            <DropShadowEffect BlurRadius="8" ShadowDepth="1" Direction="270" Opacity="0.18" Color="Black"/>
                                         </Image.Effect>
                                     </Image>
-                                    <TextBlock Text="{Binding Name}" Foreground="White" FontSize="11" TextAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="96" Margin="0,6,0,0">
+                                    <TextBlock Text="{Binding Name}" Foreground="White" FontSize="12" TextAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="112" Margin="0,7,0,0" HorizontalAlignment="Center">
                                         <TextBlock.Effect>
                                             <DropShadowEffect BlurRadius="4" ShadowDepth="0" Color="Black" Opacity="0.55"/>
                                         </TextBlock.Effect>

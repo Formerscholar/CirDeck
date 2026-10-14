@@ -127,9 +127,14 @@ public partial class DockWindow : Window
         }
 
         var settings = _session.Settings;
-        var request = Request(double.NaN);
-        Width = Math.Max(80, DockGeometry.ReserveWidth(_entries.Count, settings.DockIconSize, settings.DockSpacing, settings.DockPadding, settings.DockMagnify ? settings.DockMagnifyScale : 1));
-        Height = settings.DockPadding * 2 + settings.DockIconSize * (settings.DockMagnify ? settings.DockMagnifyScale : 1);
+        const double icon = 42;
+        const double spacing = 18;
+        const double padX = 26;
+        const double padY = 16;
+        var magnify = settings.DockMagnify ? 1.42 : 1;
+        var request = new DockRequest(_entries.Count, icon, spacing, padX, padY, magnify, double.NaN, settings.DockMagnify);
+        Width = Math.Max(120, DockGeometry.ReserveWidth(_entries.Count, icon, spacing, padX, magnify));
+        Height = padY * 2 + (icon + 12) * magnify;
         _frame = DockGeometry.Place(request, _scale);
         ApplyFrame();
         if (IsVisible)
@@ -140,8 +145,16 @@ public partial class DockWindow : Window
 
     private FrameworkElement CreateVisual(AppEntry entry)
     {
-        var size = _session.Settings.DockIconSize;
-        var image = new Image { Width = size, Height = size, Stretch = Stretch.Uniform, IsHitTestVisible = false };
+        var size = 42d;
+        var image = new Image
+        {
+            Width = size - 8,
+            Height = size - 8,
+            Stretch = Stretch.Uniform,
+            IsHitTestVisible = false,
+            VerticalAlignment = VerticalAlignment.Top,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
         if (_icons.TryCached(entry.TargetPath, out var png))
         {
             image.Source = IconBroker.LoadImage(png);
@@ -153,12 +166,12 @@ public partial class DockWindow : Window
 
         var dot = new Ellipse
         {
-            Width = 5,
-            Height = 5,
-            Fill = Brushes.White,
+            Width = 4,
+            Height = 4,
+            Fill = new SolidColorBrush(Color.FromRgb(190, 190, 196)),
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Bottom,
-            Margin = new Thickness(0, 0, 0, -6),
+            Margin = new Thickness(0, 0, 0, 1),
             Visibility = Visibility.Collapsed,
             IsHitTestVisible = false
         };
@@ -167,7 +180,7 @@ public partial class DockWindow : Window
             Width = size,
             Height = size,
             ToolTip = entry.Name,
-            RenderTransformOrigin = new Point(0.5, 0.5),
+            RenderTransformOrigin = new Point(0.5, 0.42),
             Background = Brushes.Transparent
         };
         grid.Children.Add(image);
@@ -191,16 +204,15 @@ public partial class DockWindow : Window
 
     private DockRequest Request(double pointerX)
     {
-        var settings = _session.Settings;
         return new DockRequest(
             _entries.Count,
-            settings.DockIconSize,
-            settings.DockSpacing,
-            settings.DockPadding,
-            settings.DockPadding,
-            settings.DockMagnifyScale,
+            42,
+            18,
+            26,
+            16,
+            _session.Settings.DockMagnify ? 1.42 : 1,
             pointerX,
-            settings.DockMagnify);
+            _session.Settings.DockMagnify);
     }
 
     private void OnMouseMove(object sender, MouseEventArgs e)
@@ -331,7 +343,7 @@ public partial class DockWindow : Window
 
     private void ApplyFrame()
     {
-        var icon = _session.Settings.DockIconSize;
+        var icon = 42d;
         for (var i = 0; i < _frame.Poses.Count && i < _transforms.Count; i++)
         {
             var pose = _frame.Poses[i];
@@ -348,7 +360,7 @@ public partial class DockWindow : Window
         var area = MonitorLayout.WorkAreaFromCursor();
         var dpi = VisualTreeHelper.GetDpi(this);
         Left = area.Left / dpi.DpiScaleX + (area.Width / dpi.DpiScaleX - Width) / 2;
-        Top = area.Top / dpi.DpiScaleY + area.Height / dpi.DpiScaleY - Height - 8;
+        Top = area.Top / dpi.DpiScaleY + area.Height / dpi.DpiScaleY - Height - 18;
     }
 
     private void OnMouseUp(object sender, MouseButtonEventArgs e)
