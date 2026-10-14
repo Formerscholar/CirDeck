@@ -431,7 +431,7 @@ public partial class LaunchpadWindow : Window
 
     private void OnOpenSettings(object sender, RoutedEventArgs e)
     {
-        var window = new SettingsWindow(_session);
+        var window = new SettingsWindow(_session) { Owner = this };
         window.ShowDialog();
         _tiles.Clear();
         Refresh();
