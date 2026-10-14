@@ -102,7 +102,57 @@ public partial class App : Application
 
         _session.Rescan();
         StartRunningWatch();
+        StartHotCorner();
         ListenForActivate();
+    }
+
+    private static bool IsWeChat(AppEntry entry)
+    {
+        var file = Path.GetFileName(entry.TargetPath);
+        return entry.Name.Contains("微信", StringComparison.Ordinal)
+            || file.Equals("Weixin.exe", StringComparison.OrdinalIgnoreCase)
+            || file.Equals("WeChat.exe", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void StartHotCorner()
+    {
+        var armed = true;
+        var insideSince = DateTime.MinValue;
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(40) };
+        timer.Tick += (_, _) =>
+        {
+            if (_session == null || _launchpad == null || !_session.Settings.EnableHotCorner || _launchpad.IsVisible)
+            {
+                armed = true;
+                return;
+            }
+
+            if (!MonitorLayout.TryGetCursor(out var x, out var y))
+            {
+                return;
+            }
+
+            var area = MonitorLayout.WorkAreaFromCursor();
+            var inside = HotCorner.Contains(_session.Settings.HotCorner, x, y, area.Left, area.Top, area.Right, area.Bottom);
+            if (!inside)
+            {
+                armed = true;
+                return;
+            }
+
+            if (armed)
+            {
+                insideSince = DateTime.UtcNow;
+                armed = false;
+            }
+
+            if ((DateTime.UtcNow - insideSince).TotalMilliseconds >= 280)
+            {
+                armed = false;
+                _launchpad.Present();
+            }
+        };
+        timer.Start();
     }
 
     private void ToggleLaunchpad()
@@ -147,6 +197,16 @@ public partial class App : Application
             if (string.IsNullOrWhiteSpace(directory))
             {
                 directory = Path.GetDirectoryName(entry.TargetPath) ?? string.Empty;
+            }
+
+            if (IsWeChat(entry) && WeChatWake.TryActivate())
+            {
+                if (_session?.Settings.CloseAfterLaunch == true)
+                {
+                    _launchpad?.Dismiss();
+                }
+
+                return;
             }
 
             Process.Start(new ProcessStartInfo

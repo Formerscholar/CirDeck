@@ -12,7 +12,8 @@
         TextOptions.TextFormattingMode="Display"
         TextOptions.TextRenderingMode="ClearType"
         PreviewKeyDown="OnPreviewKeyDown"
-        MouseWheel="OnMouseWheel">
+        MouseWheel="OnMouseWheel"
+        PreviewMouseLeftButtonUp="OnTileUp">
     <Grid>
         <Grid.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
@@ -43,6 +44,13 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="64"/>
             </Grid.RowDefinitions>
+            <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="28,18,0,0">
+                <TextBlock x:Name="ClockText" FontSize="32" FontWeight="Light" Foreground="#F5F5F7"/>
+                <TextBlock x:Name="MonitorText" FontSize="12" Foreground="#C7C7CC" Margin="0,2,0,0"/>
+                <StackPanel x:Name="Spectrum" Orientation="Horizontal" Height="22" Margin="0,8,0,0"/>
+            </StackPanel>
+            <Button x:Name="SettingsButton" Content="&#xE713;" FontFamily="Segoe MDL2 Assets" Width="36" Height="36" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,18,24,0" Background="#22FFFFFF" Foreground="#F5F5F7" BorderThickness="0" Click="OnOpenSettings"/>
+            <TextBlock x:Name="FolderTitle" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,22,0,0" Foreground="#F5F5F7" FontSize="16" Visibility="Collapsed"/>
             <Grid Width="380" Height="40" VerticalAlignment="Bottom" Margin="0,0,0,18">
                 <TextBox x:Name="SearchBox" Style="{StaticResource SearchBox}" TextChanged="OnSearchChanged"/>
                 <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="#E6FFFFFF" VerticalAlignment="Center" Margin="16,0,0,0" IsHitTestVisible="False"/>
@@ -53,7 +61,7 @@
                 <ItemsControl x:Name="Tiles" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Button Style="{StaticResource TileButton}" Width="112" Click="OnTileClick" PreviewMouseRightButtonUp="OnTileMenu">
+                            <Button Style="{StaticResource TileButton}" Width="112" Click="OnTileClick" PreviewMouseRightButtonUp="OnTileMenu" PreviewMouseLeftButtonDown="OnTileDown" PreviewMouseMove="OnTileMove">
                                 <StackPanel>
                                     <Image Width="72" Height="72" Source="{Binding Icon}" RenderOptions.BitmapScalingMode="HighQuality">
                                         <Image.Effect>

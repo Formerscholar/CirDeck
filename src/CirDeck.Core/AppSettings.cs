@@ -28,6 +28,22 @@ public sealed class AppSettings
 
     public bool ShowRunningIndicators { get; set; } = true;
 
+    public bool LaunchAtStartup { get; set; }
+
+    public bool EnableHotCorner { get; set; }
+
+    public string HotCorner { get; set; } = "TopLeft";
+
+    public bool ShowClock { get; set; } = true;
+
+    public bool ShowSystemMonitor { get; set; } = true;
+
+    public bool ShowMusicSpectrum { get; set; }
+
+    public bool ScanSteam { get; set; } = true;
+
+    public string ActiveLayoutId { get; set; } = "default";
+
     public void Clamp()
     {
         Columns = Math.Clamp(Columns, 4, 12);
@@ -37,5 +53,14 @@ public sealed class AppSettings
         DockPadding = Math.Clamp(DockPadding, 0, 48);
         DockMagnifyScale = Math.Clamp(DockMagnifyScale, 1, 2.2);
         MaxDockItems = Math.Clamp(MaxDockItems, 1, 16);
+        if (HotCorner is not ("TopLeft" or "TopRight" or "BottomLeft" or "BottomRight"))
+        {
+            HotCorner = "TopLeft";
+        }
+
+        if (string.IsNullOrWhiteSpace(ActiveLayoutId))
+        {
+            ActiveLayoutId = "default";
+        }
     }
 }

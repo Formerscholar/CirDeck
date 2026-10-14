@@ -79,6 +79,51 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     public static extern bool IsIconic(IntPtr hwnd);
 
+    [DllImport("user32.dll")]
+    public static extern bool IsWindowVisible(IntPtr hwnd);
+
+    public delegate bool EnumWindowsCallback(IntPtr hwnd, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    public static extern bool EnumWindows(EnumWindowsCallback callback, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    public static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint processId);
+
+    [DllImport("user32.dll")]
+    public static extern bool GetWindowRect(IntPtr hwnd, out Rect rect);
+
+    [DllImport("kernel32.dll")]
+    public static extern IntPtr OpenProcess(uint access, bool inherit, uint processId);
+
+    [DllImport("kernel32.dll")]
+    public static extern bool CloseHandle(IntPtr handle);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    public static extern bool QueryFullProcessImageName(IntPtr process, int flags, StringBuilder buffer, ref int size);
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmRegisterThumbnail(IntPtr destination, IntPtr source, out IntPtr thumbnail);
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmUnregisterThumbnail(IntPtr thumbnail);
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmUpdateThumbnailProperties(IntPtr thumbnail, ref ThumbnailProperties properties);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ThumbnailProperties
+    {
+        public uint Flags;
+        public Rect Destination;
+        public Rect Source;
+        public byte Opacity;
+        [MarshalAs(UnmanagedType.Bool)]
+        public bool Visible;
+        [MarshalAs(UnmanagedType.Bool)]
+        public bool SourceClientAreaOnly;
+    }
+
     [DllImport("kernel32.dll")]
     public static extern bool AttachConsole(int processId);
 
@@ -147,6 +192,20 @@ public static class MonitorLayout
         }
 
         return new PixelRect(info.Work.Left, info.Work.Top, info.Work.Right, info.Work.Bottom);
+    }
+
+    public static bool TryGetCursor(out int x, out int y)
+    {
+        if (!NativeMethods.GetCursorPos(out var point))
+        {
+            x = 0;
+            y = 0;
+            return false;
+        }
+
+        x = point.X;
+        y = point.Y;
+        return true;
     }
 }
 

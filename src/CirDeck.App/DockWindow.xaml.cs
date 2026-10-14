@@ -24,6 +24,21 @@ public partial class DockWindow : Window
     private bool _ticking;
     private bool _allowClose;
     private string _signature = string.Empty;
+    private int _hoverIndex = -1;
+    private DateTime _hoverSince;
+    private readonly Window _preview = new()
+    {
+        Width = 280,
+        Height = 168,
+        WindowStyle = WindowStyle.None,
+        ResizeMode = ResizeMode.NoResize,
+        ShowInTaskbar = false,
+        ShowActivated = false,
+        Topmost = true,
+        Background = System.Windows.Media.Brushes.Black,
+        AllowsTransparency = false
+    };
+    private IntPtr _thumbnail;
 
     public DockWindow(LibrarySession session, IconBroker icons)
     {
@@ -34,7 +49,6 @@ public partial class DockWindow : Window
         SizeChanged += OnSizeChanged;
         _session.Changed += Rebuild;
         _icons.Ready += OnIconReady;
-        MouseMove += (_, _) => EnsureTick();
     }
 
     public event Action<AppEntry>? LaunchRequested;
@@ -190,12 +204,69 @@ public partial class DockWindow : Window
 
     private void OnMouseMove(object sender, MouseEventArgs e)
     {
+        var index = Hit(e.GetPosition(Surface));
+        if (index >= 0)
+        {
+            if (_hoverIndex != index)
+            {
+                _hoverIndex = index;
+                _hoverSince = DateTime.UtcNow;
+                HidePreview();
+            }
+            else if ((DateTime.UtcNow - _hoverSince).TotalMilliseconds > 280)
+            {
+                ShowPreview(index);
+            }
+        }
+        else
+        {
+            _hoverIndex = -1;
+            HidePreview();
+        }
+
         EnsureTick();
     }
 
     private void OnMouseLeave(object sender, MouseEventArgs e)
     {
+        _hoverIndex = -1;
+        HidePreview();
         EnsureTick();
+    }
+
+    private void ShowPreview(int index)
+    {
+        if (index < 0 || index >= _entries.Count || _preview.IsVisible)
+        {
+            return;
+        }
+
+        var source = LivePreview.FindMainWindow(_entries[index].TargetPath);
+        if (source == IntPtr.Zero)
+        {
+            return;
+        }
+
+        var pose = _frame.Poses[index];
+        var origin = Surface.PointToScreen(new Point(pose.Left, pose.Top));
+        var dpi = VisualTreeHelper.GetDpi(this);
+        _preview.Left = origin.X / dpi.DpiScaleX;
+        _preview.Top = origin.Y / dpi.DpiScaleY - _preview.Height - 12;
+        _preview.Show();
+        var hwnd = new WindowInteropHelper(_preview).EnsureHandle();
+        LivePreview.Close(_thumbnail);
+        _thumbnail = LivePreview.Register(hwnd, source);
+        LivePreview.Update(_thumbnail, (int)(_preview.Width * dpi.DpiScaleX), (int)(_preview.Height * dpi.DpiScaleY));
+    }
+
+    private void HidePreview()
+    {
+        LivePreview.Close(_thumbnail);
+        _thumbnail = IntPtr.Zero;
+        if (_preview.IsVisible)
+        {
+            _preview.Hide();
+        }
     }
 
     private void EnsureTick()

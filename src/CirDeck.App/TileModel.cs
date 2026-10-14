@@ -9,14 +9,18 @@ public sealed class TileModel : INotifyPropertyChanged
     private ImageSource? _icon;
     private bool _selected;
 
-    public TileModel(AppEntry entry)
+    public TileModel(LaunchTile tile)
     {
-        Entry = entry;
+        Tile = tile;
     }
 
-    public AppEntry Entry { get; }
+    public LaunchTile Tile { get; }
 
-    public string Name => Entry.Name;
+    public AppEntry? Entry => Tile.App;
+
+    public string Name => Tile.Name;
+
+    public bool IsFolder => Tile.IsFolder;
 
     public ImageSource? Icon
     {

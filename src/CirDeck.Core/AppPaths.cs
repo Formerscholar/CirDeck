@@ -16,5 +16,11 @@ public static class AppPaths
 
     public static string IconCache => Path.Combine(LocalRoot, "icons");
 
+    public static string CustomIcons => Path.Combine(LocalRoot, "custom-icons");
+
     public static string LogPath => Path.Combine(LocalRoot, "cirdeck.log");
+
+    public static string LibraryPath => Path.Combine(RoamingRoot, "library.json");
+
+    public static string LayoutsDirectory => Path.Combine(RoamingRoot, "layouts");
 }

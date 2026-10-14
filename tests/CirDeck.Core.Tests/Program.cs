@@ -7,6 +7,7 @@ internal static class Program
         DockTests.Run();
         SearchTests.Run();
         SettingsTests.Run();
+        LibraryTests.Run();
         return TestHost.Finish();
     }
 }
