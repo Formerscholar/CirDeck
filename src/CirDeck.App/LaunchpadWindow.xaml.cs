@@ -26,12 +26,25 @@ public partial class LaunchpadWindow : Window
     private readonly DispatcherTimer _widgets = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly AudioMeter _audio = new();
     private bool _audioOn;
+    private readonly TranslateTransform _slide = new();
+    private double _slideTarget;
+    private double _slideAtPress;
+    private bool _sliding;
+    private bool _slideExit;
+    private int _slideDir;
+    private TimeSpan _slideClock;
+    private const double CellWidth = 168;
+    private const double CellHeight = 152;
+    private double _cellW = CellWidth;
+    private double _cellH = CellHeight;
 
     public LaunchpadWindow(LibrarySession session, IconBroker icons)
     {
         _session = session;
         _icons = icons;
         InitializeComponent();
+        Tiles.RenderTransform = _slide;
+        SizeChanged += (_, _) => ApplyColumns();
         SourceInitialized += (_, _) =>
         {
             RegisterHotkey();
@@ -112,11 +125,22 @@ public partial class LaunchpadWindow : Window
 
     private void ApplyColumns()
     {
-        var columns = _session.Settings.Columns;
+        if (Tiles == null)
+        {
+            return;
+        }
+
+        var columns = Math.Max(1, _session.Settings.Columns);
+        var rows = Math.Max(1, _session.Settings.Rows);
+        var width = ActualWidth > 240 ? ActualWidth : 1600;
+        var height = ActualHeight > 240 ? ActualHeight : 1000;
+        _cellW = Math.Min(CellWidth, Math.Max(128, (width - 80) / columns));
+        _cellH = Math.Min(CellHeight, Math.Max(118, (height - 430) / rows));
         var factory = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.Primitives.UniformGrid));
         factory.SetValue(System.Windows.Controls.Primitives.UniformGrid.ColumnsProperty, columns);
         Tiles.ItemsPanel = new ItemsPanelTemplate(factory);
-        Tiles.Width = columns * 120;
+        Tiles.Width = columns * _cellW;
+        Tiles.Height = rows * _cellH;
         Tiles.HorizontalAlignment = HorizontalAlignment.Center;
     }
 
@@ -169,6 +193,11 @@ public partial class LaunchpadWindow : Window
         FolderTitle.Visibility = string.IsNullOrEmpty(_session.OpenFolderId) ? Visibility.Collapsed : Visibility.Visible;
         var open = _session.Library.Folders.FirstOrDefault(folder => folder.Id == _session.OpenFolderId);
         FolderTitle.Text = open == null ? string.Empty : open.Name;
+        var columns = Math.Max(1, _session.Settings.Columns);
+        var usedRows = visible == 0
+            ? Math.Max(1, _session.Settings.Rows)
+            : Math.Min(Math.Max(1, _session.Settings.Rows), (visible + columns - 1) / columns);
+        Tiles.Height = usedRows * _cellH;
         DrawDots(pages);
         UpdateWidgets();
     }
@@ -218,18 +247,15 @@ public partial class LaunchpadWindow : Window
                 Background = new SolidColorBrush(active ? Color.FromArgb(230, 255, 255, 255) : Color.FromArgb(70, 255, 255, 255)),
                 Cursor = Cursors.Hand
             };
-            dot.MouseLeftButtonUp += (_, _) =>
-            {
-                _page = index;
-                _selected = 0;
-                Refresh();
-            };
+            dot.MouseLeftButtonUp += (_, _) => NudgeTo(index);
             Dots.Children.Add(dot);
         }
     }
 
     private void OnSearchChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
+        StopSlide();
+        _slide.X = 0;
         _page = 0;
         _selected = 0;
         Refresh();
@@ -301,9 +327,118 @@ public partial class LaunchpadWindow : Window
             index = _results.Count - 1;
         }
 
-        _page = index / pageSize;
+        var nextPage = index / pageSize;
+        var pageChanged = nextPage != _page;
+        _page = nextPage;
         _selected = index % pageSize;
+        if (pageChanged)
+        {
+            StopSlide();
+            _slide.X = delta > 0 ? 132 : -132;
+            Refresh();
+            StartSlide(0, false, 0);
+            return;
+        }
+
         Refresh();
+    }
+
+    private void NudgeTo(int page)
+    {
+        var pages = PageLayout.PageCount(_results.Count, PageLayout.PageSize(_session.Settings.Columns, _session.Settings.Rows));
+        page = PageLayout.Clamp(page, pages);
+        if (page == _page || pages <= 1)
+        {
+            return;
+        }
+
+        StopSlide();
+        var dir = page > _page ? 1 : -1;
+        _page = page;
+        _selected = -1;
+        _slide.X = dir * 136;
+        Refresh();
+        StartSlide(0, false, 0);
+    }
+
+    private void StartSlide(double target, bool exit, int direction)
+    {
+        _slideTarget = target;
+        _slideExit = exit;
+        _slideDir = direction;
+        if (_sliding)
+        {
+            return;
+        }
+
+        _sliding = true;
+        _slideClock = TimeSpan.Zero;
+        CompositionTarget.Rendering += OnSlide;
+    }
+
+    private void StopSlide()
+    {
+        if (_sliding)
+        {
+            CompositionTarget.Rendering -= OnSlide;
+            _sliding = false;
+        }
+
+        _slideExit = false;
+        _slideClock = TimeSpan.Zero;
+    }
+
+    private void OnSlide(object? sender, EventArgs e)
+    {
+        var now = e is RenderingEventArgs args ? args.RenderingTime : TimeSpan.Zero;
+        var dt = _slideClock == TimeSpan.Zero ? 1d / 60 : (now - _slideClock).TotalSeconds;
+        _slideClock = now;
+        if (dt <= 0 || dt > 0.05)
+        {
+            dt = 1d / 60;
+        }
+
+        var omega = _slideExit ? 26d : 18d;
+        _slide.X += (_slideTarget - _slide.X) * (1 - Math.Exp(-omega * dt));
+        if (Math.Abs(_slideTarget - _slide.X) > 0.8)
+        {
+            return;
+        }
+
+        _slide.X = _slideTarget;
+        if (!_slideExit)
+        {
+            StopSlide();
+            return;
+        }
+
+        var pages = PageLayout.PageCount(_results.Count, PageLayout.PageSize(_session.Settings.Columns, _session.Settings.Rows));
+        var next = PageLayout.Clamp(_page + _slideDir, pages);
+        _slideExit = false;
+        if (next == _page)
+        {
+            _slideTarget = 0;
+            return;
+        }
+
+        _page = next;
+        _selected = -1;
+        _pressed = null;
+        _slide.X = _slideDir > 0 ? 148 : -148;
+        _slideTarget = 0;
+        Refresh();
+    }
+
+    private static double Rubber(double value)
+    {
+        const double limit = 300;
+        var distance = Math.Abs(value);
+        if (distance <= limit)
+        {
+            return value;
+        }
+
+        return Math.Sign(value) * (limit + (distance - limit) * 0.2);
     }
 
     private void OnMouseWheel(object sender, MouseWheelEventArgs e)
@@ -314,9 +449,7 @@ public partial class LaunchpadWindow : Window
             return;
         }
 
-        _page = PageLayout.Clamp(_page + (e.Delta < 0 ? 1 : -1), pages);
-        _selected = 0;
-        Refresh();
+        NudgeTo(PageLayout.Clamp(_page + (e.Delta < 0 ? 1 : -1), pages));
         e.Handled = true;
     }
 
@@ -353,7 +486,9 @@ public partial class LaunchpadWindow : Window
             return;
         }
 
+        StopSlide();
         _pressPoint = e.GetPosition(this);
+        _slideAtPress = _slide.X;
         _dragged = false;
         _pressed = TileUnder(e.GetPosition(this));
         Mouse.Capture(this);
@@ -375,9 +510,9 @@ public partial class LaunchpadWindow : Window
         }
 
         _dragged = true;
-        if (Math.Abs(dx) > Math.Abs(dy))
+        if (Math.Abs(dx) > Math.Abs(dy) && string.IsNullOrWhiteSpace(SearchBox.Text))
         {
-            Tiles.RenderTransform = new TranslateTransform(Math.Clamp(dx * 0.35, -180, 180), 0);
+            _slide.X = Rubber(_slideAtPress + dx);
         }
     }
 
@@ -434,6 +569,7 @@ public partial class LaunchpadWindow : Window
         var window = new SettingsWindow(_session) { Owner = this };
         window.ShowDialog();
         _tiles.Clear();
+        ApplyColumns();
         Refresh();
     }
 
@@ -574,18 +710,30 @@ public partial class LaunchpadWindow : Window
         var point = e.GetPosition(this);
         var dx = point.X - _pressPoint.X;
         var dy = point.Y - _pressPoint.Y;
-        var horizontal = _dragged && Math.Abs(dx) > 72 && Math.Abs(dx) > Math.Abs(dy);
-        Tiles.RenderTransform = Transform.Identity;
+        var horizontal = _dragged && Math.Abs(dx) > 64 && Math.Abs(dx) > Math.Abs(dy);
         Mouse.Capture(null);
 
         if (horizontal && string.IsNullOrWhiteSpace(SearchBox.Text))
         {
             var pages = PageLayout.PageCount(_results.Count, PageLayout.PageSize(_session.Settings.Columns, _session.Settings.Rows));
-            _page = PageLayout.Clamp(_page + (dx < 0 ? 1 : -1), pages);
-            _selected = -1;
+            var dir = dx < 0 ? 1 : -1;
+            var next = PageLayout.Clamp(_page + dir, pages);
             _pressed = null;
-            Refresh();
+            if (next == _page)
+            {
+                StartSlide(0, false, 0);
+            }
+            else
+            {
+                StartSlide(dir > 0 ? -340 : 340, true, dir);
+            }
+
             return;
+        }
+
+        if (Math.Abs(_slide.X) > 0.5)
+        {
+            StartSlide(0, false, 0);
         }
 
         if (!_dragged || _pressed == null || !string.IsNullOrWhiteSpace(SearchBox.Text))
