@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>CirDeck.App</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationTitle>CirDeck</ApplicationTitle>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CirDeck.Core\CirDeck.Core.csproj" />
+    <ProjectReference Include="..\CirDeck.Interop\CirDeck.Interop.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>CirDeck.Core</RootNamespace>
+    <Description>Launchpad search, dock geometry, and local settings. No UI and no license checks.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="pinyin-initials.bin">
+      <LogicalName>CirDeck.Core.pinyin-initials.bin</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>
