@@ -7,7 +7,7 @@
         ShowInTaskbar="False"
         ShowActivated="False"
         Topmost="True"
-        Background="#2C2C2E"
+        Background="#F3F4F6"
         AllowsTransparency="False"
         UseLayoutRounding="True"
         MouseMove="OnMouseMove"

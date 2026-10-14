@@ -73,6 +73,7 @@ public partial class DockWindow : Window
 
         Show();
         Place();
+        WindowChrome.KeepAbove(new WindowInteropHelper(this).Handle);
     }
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)

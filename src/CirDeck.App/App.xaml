@@ -14,7 +14,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="Transparent" CornerRadius="22" Padding="8,10">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="16" Padding="6,4">
                             <ContentPresenter HorizontalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -30,14 +30,13 @@
             </Setter>
         </Style>
         <Style x:Key="SearchBox" TargetType="TextBox">
-            <Setter Property="Background" Value="#2EFFFFFF"/>
+            <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="#F5F5F7"/>
             <Setter Property="CaretBrush" Value="White"/>
-            <Setter Property="BorderBrush" Value="#40FFFFFF"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="FontSize" Value="15"/>
-            <Setter Property="Padding" Value="40,0,16,0"/>
-            <Setter Property="Height" Value="40"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="30,0,8,0"/>
+            <Setter Property="Height" Value="36"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>

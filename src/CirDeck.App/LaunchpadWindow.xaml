@@ -6,7 +6,7 @@
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         Topmost="True"
-        Background="Transparent"
+        Background="#F3E6D8"
         FontFamily="Segoe UI Variable Display, Segoe UI, Microsoft YaHei UI"
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display"
@@ -15,67 +15,82 @@
         MouseWheel="OnMouseWheel"
         PreviewMouseLeftButtonUp="OnTileUp">
     <Grid>
-        <Grid.Background>
-            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#CC141821" Offset="0"/>
-                <GradientStop Color="#B31A2030" Offset="0.55"/>
-                <GradientStop Color="#CC10141C" Offset="1"/>
-            </LinearGradientBrush>
-        </Grid.Background>
-        <Ellipse Width="560" Height="420" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-40,-40,0,0" IsHitTestVisible="False">
-            <Ellipse.Fill>
-                <RadialGradientBrush>
-                    <GradientStop Color="#227AA2FF" Offset="0"/>
-                    <GradientStop Color="#007AA2FF" Offset="1"/>
-                </RadialGradientBrush>
-            </Ellipse.Fill>
-        </Ellipse>
-        <Ellipse Width="520" Height="380" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-20,-40" IsHitTestVisible="False">
-            <Ellipse.Fill>
-                <RadialGradientBrush>
-                    <GradientStop Color="#20C9A0FF" Offset="0"/>
-                    <GradientStop Color="#00C9A0FF" Offset="1"/>
-                </RadialGradientBrush>
-            </Ellipse.Fill>
-        </Ellipse>
-        <Grid>
+        <Image x:Name="Backdrop" Stretch="UniformToFill" IsHitTestVisible="False"/>
+        <Border Background="#14000000" IsHitTestVisible="False"/>
+        <Grid Margin="0,0,0,96">
             <Grid.RowDefinitions>
-                <RowDefinition Height="108"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="64"/>
+                <RowDefinition Height="36"/>
             </Grid.RowDefinitions>
-            <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="28,18,0,0">
-                <TextBlock x:Name="ClockText" FontSize="32" FontWeight="Light" Foreground="#F5F5F7"/>
-                <TextBlock x:Name="MonitorText" FontSize="12" Foreground="#C7C7CC" Margin="0,2,0,0"/>
-                <StackPanel x:Name="Spectrum" Orientation="Horizontal" Height="22" Margin="0,8,0,0"/>
-            </StackPanel>
-            <Button x:Name="SettingsButton" Content="&#xE713;" FontFamily="Segoe MDL2 Assets" Width="36" Height="36" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,18,24,0" Background="#22FFFFFF" Foreground="#F5F5F7" BorderThickness="0" Click="OnOpenSettings"/>
-            <TextBlock x:Name="FolderTitle" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,22,0,0" Foreground="#F5F5F7" FontSize="16" Visibility="Collapsed"/>
-            <Grid Width="380" Height="40" VerticalAlignment="Bottom" Margin="0,0,0,18">
-                <TextBox x:Name="SearchBox" Style="{StaticResource SearchBox}" TextChanged="OnSearchChanged"/>
-                <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="#E6FFFFFF" VerticalAlignment="Center" Margin="16,0,0,0" IsHitTestVisible="False"/>
-                <TextBlock x:Name="SearchHint" Text="搜索" Foreground="#B3F5F5F7" FontSize="15" VerticalAlignment="Center" Margin="40,0,0,0" IsHitTestVisible="False"/>
+            <Grid Margin="28,18,28,0">
+                <Border x:Name="MonitorPill" HorizontalAlignment="Center" Background="#8C1C1C1E" CornerRadius="16" Padding="12,6" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="CPU" Foreground="#F5F5F7" FontSize="12" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="CpuText" Text="0%" Foreground="#F5F5F7" FontSize="12" FontWeight="SemiBold" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="RAM" Foreground="#F5F5F7" FontSize="12" Margin="14,0,0,0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="RamText" Text="0%" Foreground="#F5F5F7" FontSize="12" FontWeight="SemiBold" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+                <Border HorizontalAlignment="Right" Background="#8C1C1C1E" CornerRadius="18" Height="36" VerticalAlignment="Center">
+                    <DockPanel>
+                        <Button x:Name="SettingsButton" DockPanel.Dock="Right" Content="&#xE713;" FontFamily="Segoe MDL2 Assets" Width="34" Background="Transparent" Foreground="#F5F5F7" BorderThickness="0" Click="OnOpenSettings"/>
+                        <TextBlock DockPanel.Dock="Right" Text="Ctrl + Alt + Space" Foreground="#B3F5F5F7" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                        <Grid Width="280">
+                            <TextBox x:Name="SearchBox" Style="{StaticResource SearchBox}" TextChanged="OnSearchChanged"/>
+                            <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#E6FFFFFF" VerticalAlignment="Center" Margin="12,0,0,0" IsHitTestVisible="False"/>
+                            <TextBlock x:Name="SearchHint" Text="搜索应用名称或拼音首字母" Foreground="#C7F5F5F7" FontSize="12" VerticalAlignment="Center" Margin="32,0,0,0" IsHitTestVisible="False"/>
+                        </Grid>
+                    </DockPanel>
+                </Border>
+                <TextBlock x:Name="FolderTitle" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="16" Visibility="Collapsed"/>
             </Grid>
-            <Grid Grid.Row="1">
-                <TextBlock x:Name="EmptyText" Text="正在读取开始菜单…" Foreground="#F5F5F7" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                <ItemsControl x:Name="Tiles" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <StackPanel x:Name="ClockPanel" Grid.Row="1" HorizontalAlignment="Center" Margin="0,18,0,8">
+                <TextBlock x:Name="DateText" TextAlignment="Center" Foreground="White" FontSize="16" Margin="0,0,0,12">
+                    <TextBlock.Effect>
+                        <DropShadowEffect BlurRadius="8" ShadowDepth="0" Color="Black" Opacity="0.35"/>
+                    </TextBlock.Effect>
+                </TextBlock>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Border Background="#F0141418" CornerRadius="14" Width="112" Height="96">
+                        <TextBlock x:Name="HourText" FontSize="58" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text=":" FontSize="42" FontWeight="Bold" Foreground="White" Margin="12,0" VerticalAlignment="Center"/>
+                    <Border Background="#F0141418" CornerRadius="14" Width="112" Height="96">
+                        <TextBlock x:Name="MinuteText" FontSize="58" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text=":" FontSize="42" FontWeight="Bold" Foreground="White" Margin="12,0" VerticalAlignment="Center"/>
+                    <Border Background="#F0141418" CornerRadius="14" Width="112" Height="96">
+                        <TextBlock x:Name="SecondText" FontSize="58" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </StackPanel>
+                <StackPanel x:Name="Spectrum" Orientation="Horizontal" HorizontalAlignment="Center" Height="18" Margin="0,10,0,0"/>
+            </StackPanel>
+            <Grid Grid.Row="2">
+                <TextBlock x:Name="EmptyText" Text="正在读取开始菜单…" Foreground="White" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <ItemsControl x:Name="Tiles" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,12,0,0">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Button Style="{StaticResource TileButton}" Width="112" Click="OnTileClick" PreviewMouseRightButtonUp="OnTileMenu" PreviewMouseLeftButtonDown="OnTileDown" PreviewMouseMove="OnTileMove">
+                            <Button Style="{StaticResource TileButton}" Width="104" Click="OnTileClick" PreviewMouseRightButtonUp="OnTileMenu" PreviewMouseLeftButtonDown="OnTileDown" PreviewMouseMove="OnTileMove">
                                 <StackPanel>
-                                    <Image Width="72" Height="72" Source="{Binding Icon}" RenderOptions.BitmapScalingMode="HighQuality">
+                                    <Image Width="54" Height="54" Source="{Binding Icon}" RenderOptions.BitmapScalingMode="HighQuality">
                                         <Image.Effect>
-                                            <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270" Opacity="0.28" Color="Black"/>
+                                            <DropShadowEffect BlurRadius="10" ShadowDepth="1" Direction="270" Opacity="0.22" Color="Black"/>
                                         </Image.Effect>
                                     </Image>
-                                    <TextBlock Text="{Binding Name}" Foreground="#F5F5F7" FontSize="12" FontWeight="Medium" TextAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="104" Margin="0,8,0,0"/>
+                                    <TextBlock Text="{Binding Name}" Foreground="White" FontSize="11" TextAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="96" Margin="0,6,0,0">
+                                        <TextBlock.Effect>
+                                            <DropShadowEffect BlurRadius="4" ShadowDepth="0" Color="Black" Opacity="0.55"/>
+                                        </TextBlock.Effect>
+                                    </TextBlock>
                                 </StackPanel>
                             </Button>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </Grid>
-            <StackPanel x:Name="Dots" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <StackPanel x:Name="Dots" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Grid>
     </Grid>
 </Window>

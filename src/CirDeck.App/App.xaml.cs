@@ -94,6 +94,10 @@ public partial class App : Application
         if (_session.Settings.OpenLaunchpadAtStartup)
         {
             _launchpad.Present();
+            if (_session.Settings.ShowDock)
+            {
+                _dock.ShowDock();
+            }
         }
         else
         {
@@ -150,6 +154,10 @@ public partial class App : Application
             {
                 armed = false;
                 _launchpad.Present();
+                if (_session?.Settings.ShowDock == true)
+                {
+                    _dock?.ShowDock();
+                }
             }
         };
         timer.Start();
@@ -169,6 +177,10 @@ public partial class App : Application
         else
         {
             _launchpad.Present();
+            if (_session?.Settings.ShowDock == true)
+            {
+                _dock?.ShowDock();
+            }
         }
     }
 
@@ -179,7 +191,7 @@ public partial class App : Application
             return;
         }
 
-        if (_session.Settings.ShowDock && !_launchpad.IsVisible)
+        if (_session.Settings.ShowDock)
         {
             _dock.ShowDock();
         }
@@ -285,6 +297,10 @@ public partial class App : Application
                     if (!_exiting)
                     {
                         _launchpad?.Present();
+                        if (_session?.Settings.ShowDock == true)
+                        {
+                            _dock?.ShowDock();
+                        }
                     }
                 }));
             }

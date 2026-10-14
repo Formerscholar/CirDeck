@@ -36,6 +36,7 @@ public partial class LaunchpadWindow : Window
         {
             RegisterHotkey();
             WindowChrome.ApplyLaunchpad(new WindowInteropHelper(this).Handle);
+            Backdrop.Source = DesktopBackdrop.Load();
         };
         _session.Changed += Refresh;
         _icons.Ready += OnIconReady;
@@ -114,7 +115,7 @@ public partial class LaunchpadWindow : Window
         var factory = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.Primitives.UniformGrid));
         factory.SetValue(System.Windows.Controls.Primitives.UniformGrid.ColumnsProperty, _session.Settings.Columns);
         Tiles.ItemsPanel = new ItemsPanelTemplate(factory);
-        Tiles.MaxWidth = _session.Settings.Columns * 116;
+        Tiles.MaxWidth = _session.Settings.Columns * 108;
     }
 
     private void Refresh()
@@ -440,18 +441,29 @@ public partial class LaunchpadWindow : Window
 
     private void UpdateWidgets()
     {
-        if (ClockText == null)
+        if (HourText == null)
         {
             return;
         }
 
-        ClockText.Visibility = _session.Settings.ShowClock ? Visibility.Visible : Visibility.Collapsed;
-        ClockText.Text = DateTime.Now.ToString("HH:mm");
-        MonitorText.Visibility = _session.Settings.ShowSystemMonitor ? Visibility.Visible : Visibility.Collapsed;
-        if (_session.Settings.ShowSystemMonitor)
+        var now = DateTime.Now;
+        var showClock = _session.Settings.ShowClock;
+        ClockPanel.Visibility = showClock ? Visibility.Visible : Visibility.Collapsed;
+        if (showClock)
+        {
+            DateText.Text = now.ToString("yyyy年M月d日 · dddd", System.Globalization.CultureInfo.GetCultureInfo("zh-CN"));
+            HourText.Text = now.ToString("HH");
+            MinuteText.Text = now.ToString("mm");
+            SecondText.Text = now.ToString("ss");
+        }
+
+        var showMonitor = _session.Settings.ShowSystemMonitor;
+        MonitorPill.Visibility = showMonitor ? Visibility.Visible : Visibility.Collapsed;
+        if (showMonitor)
         {
             var sample = SystemSampler.Read();
-            MonitorText.Text = "CPU " + sample.CpuPercent.ToString("0") + "%    " + sample.MemoryText;
+            CpuText.Text = sample.CpuPercent.ToString("0") + "%";
+            RamText.Text = sample.MemoryPercent.ToString("0") + "%";
         }
 
         Spectrum.Visibility = _session.Settings.ShowMusicSpectrum ? Visibility.Visible : Visibility.Collapsed;
@@ -484,7 +496,7 @@ public partial class LaunchpadWindow : Window
 
             for (var i = 0; i < levels.Length; i++)
             {
-                ((System.Windows.Shapes.Rectangle)Spectrum.Children[i]).Height = 4 + levels[i] * 18;
+                ((System.Windows.Shapes.Rectangle)Spectrum.Children[i]).Height = 3 + levels[i] * 14;
             }
         }
         else if (_audioOn)

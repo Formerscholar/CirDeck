@@ -82,6 +82,9 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     public static extern bool IsWindowVisible(IntPtr hwnd);
 
+    [DllImport("user32.dll")]
+    public static extern bool SetWindowPos(IntPtr hwnd, IntPtr insertAfter, int x, int y, int width, int height, uint flags);
+
     public delegate bool EnumWindowsCallback(IntPtr hwnd, IntPtr lParam);
 
     [DllImport("user32.dll")]
@@ -226,6 +229,16 @@ public static class WindowChrome
 
         var preference = 2;
         NativeMethods.DwmSetWindowAttribute(hwnd, 33, ref preference, sizeof(int));
+    }
+
+    public static void KeepAbove(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero)
+        {
+            return;
+        }
+
+        NativeMethods.SetWindowPos(hwnd, new IntPtr(-1), 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0010);
     }
 
     public static void ClipCapsule(IntPtr hwnd, int width, int height)
