@@ -7,12 +7,16 @@
         ShowInTaskbar="False"
         ShowActivated="False"
         Topmost="True"
-        Background="#F3F4F6"
+        Background="Transparent"
         AllowsTransparency="False"
         UseLayoutRounding="True"
         MouseMove="OnMouseMove"
         MouseLeave="OnMouseLeave"
         MouseLeftButtonUp="OnMouseUp"
         MouseRightButtonUp="OnBackgroundMenu">
-    <Canvas x:Name="Surface"/>
+    <Grid>
+        <Image x:Name="Plate" Stretch="UniformToFill" IsHitTestVisible="False"/>
+        <Border Background="#D6FFFFFF" IsHitTestVisible="False"/>
+        <Canvas x:Name="Surface"/>
+    </Grid>
 </Window>

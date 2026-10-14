@@ -73,6 +73,7 @@ public partial class DockWindow : Window
 
         Show();
         Place();
+        Plate.Source = DesktopBackdrop.Current;
         WindowChrome.KeepAbove(new WindowInteropHelper(this).Handle);
     }
 
@@ -127,11 +128,11 @@ public partial class DockWindow : Window
         }
 
         var settings = _session.Settings;
-        const double icon = 42;
-        const double spacing = 18;
-        const double padX = 26;
-        const double padY = 16;
-        var magnify = settings.DockMagnify ? 1.42 : 1;
+        const double icon = 48;
+        const double spacing = 14;
+        const double padX = 22;
+        const double padY = 14;
+        var magnify = settings.DockMagnify ? 1.55 : 1;
         var request = new DockRequest(_entries.Count, icon, spacing, padX, padY, magnify, double.NaN, settings.DockMagnify);
         Width = Math.Max(120, DockGeometry.ReserveWidth(_entries.Count, icon, spacing, padX, magnify));
         Height = padY * 2 + (icon + 12) * magnify;
@@ -145,7 +146,7 @@ public partial class DockWindow : Window
 
     private FrameworkElement CreateVisual(AppEntry entry)
     {
-        var size = 42d;
+        var size = 48d;
         var image = new Image
         {
             Width = size - 8,
@@ -155,6 +156,7 @@ public partial class DockWindow : Window
             VerticalAlignment = VerticalAlignment.Top,
             HorizontalAlignment = HorizontalAlignment.Center
         };
+        RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
         if (_icons.TryCached(entry.TargetPath, out var png))
         {
             image.Source = IconBroker.LoadImage(png);
@@ -206,11 +208,11 @@ public partial class DockWindow : Window
     {
         return new DockRequest(
             _entries.Count,
-            42,
-            18,
-            26,
-            16,
-            _session.Settings.DockMagnify ? 1.42 : 1,
+            48,
+            14,
+            22,
+            14,
+            _session.Settings.DockMagnify ? 1.55 : 1,
             pointerX,
             _session.Settings.DockMagnify);
     }
@@ -293,12 +295,22 @@ public partial class DockWindow : Window
         CompositionTarget.Rendering += OnRendering;
     }
 
+    private TimeSpan _lastRender;
+
     private void OnRendering(object? sender, EventArgs e)
     {
         if (_entries.Count == 0)
         {
             StopTick();
             return;
+        }
+
+        var now = e is RenderingEventArgs args ? args.RenderingTime : TimeSpan.Zero;
+        var dt = _lastRender == TimeSpan.Zero ? 1d / 60 : (now - _lastRender).TotalSeconds;
+        _lastRender = now;
+        if (dt <= 0 || dt > 0.05)
+        {
+            dt = 1d / 60;
         }
 
         var pointer = double.NaN;
@@ -314,9 +326,9 @@ public partial class DockWindow : Window
         for (var i = 0; i < target.Length; i++)
         {
             var velocity = _velocity[i];
-            _scale[i] = DockMotion.Follow(_scale[i], target[i], ref velocity, 1d / 120d);
+            _scale[i] = DockMotion.Follow(_scale[i], target[i], ref velocity, dt, 14);
             _velocity[i] = velocity;
-            if (Math.Abs(_scale[i] - target[i]) > 0.01 || Math.Abs(velocity) > 0.02)
+            if (Math.Abs(_scale[i] - target[i]) > 0.004 || Math.Abs(velocity) > 0.01)
             {
                 settled = false;
             }
@@ -326,6 +338,7 @@ public partial class DockWindow : Window
         ApplyFrame();
         if (settled)
         {
+            _lastRender = TimeSpan.Zero;
             StopTick();
         }
     }
@@ -343,7 +356,7 @@ public partial class DockWindow : Window
 
     private void ApplyFrame()
     {
-        var icon = 42d;
+        var icon = 48d;
         for (var i = 0; i < _frame.Poses.Count && i < _transforms.Count; i++)
         {
             var pose = _frame.Poses[i];

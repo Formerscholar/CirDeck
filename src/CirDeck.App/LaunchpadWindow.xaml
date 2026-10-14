@@ -58,11 +58,11 @@
                     <Border Background="#F0141418" CornerRadius="14" Width="112" Height="96">
                         <TextBlock x:Name="HourText" FontSize="58" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
-                    <TextBlock Text=":" FontSize="42" FontWeight="Bold" Foreground="White" Margin="12,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="·" FontSize="28" FontWeight="Bold" Foreground="#F5F5F7" Margin="10,0" VerticalAlignment="Center"/>
                     <Border Background="#F0141418" CornerRadius="14" Width="112" Height="96">
                         <TextBlock x:Name="MinuteText" FontSize="58" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
-                    <TextBlock Text=":" FontSize="42" FontWeight="Bold" Foreground="White" Margin="12,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="·" FontSize="28" FontWeight="Bold" Foreground="#F5F5F7" Margin="10,0" VerticalAlignment="Center"/>
                     <Border Background="#F0141418" CornerRadius="14" Width="112" Height="96">
                         <TextBlock x:Name="SecondText" FontSize="58" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
@@ -81,9 +81,9 @@
                                             <DropShadowEffect BlurRadius="8" ShadowDepth="1" Direction="270" Opacity="0.18" Color="Black"/>
                                         </Image.Effect>
                                     </Image>
-                                    <TextBlock Text="{Binding Name}" Foreground="White" FontSize="12" TextAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="112" Margin="0,7,0,0" HorizontalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" Foreground="#F4F4F5" FontSize="12" TextAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="112" Margin="0,7,0,0" HorizontalAlignment="Center">
                                         <TextBlock.Effect>
-                                            <DropShadowEffect BlurRadius="4" ShadowDepth="0" Color="Black" Opacity="0.55"/>
+                                            <DropShadowEffect BlurRadius="2" ShadowDepth="0" Color="Black" Opacity="0.28"/>
                                         </TextBlock.Effect>
                                     </TextBlock>
                                 </StackPanel>

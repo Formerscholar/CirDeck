@@ -114,7 +114,7 @@ public sealed class IconBroker
 
     private static void Render(string path, string destination)
     {
-        var icon = IconExtractor.Extract(path, 48);
+        var icon = IconExtractor.Extract(path, 256);
         if (icon == IntPtr.Zero)
         {
             return;
@@ -125,7 +125,7 @@ public sealed class IconBroker
             var source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(
                 icon,
                 Int32Rect.Empty,
-                BitmapSizeOptions.FromEmptyOptions());
+                BitmapSizeOptions.FromWidthAndHeight(256, 256));
             source.Freeze();
             var encoder = new PngBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(source));
@@ -158,7 +158,7 @@ public sealed class IconBroker
         {
         }
 
-        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(path.ToLowerInvariant() + ":" + stamp)));
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(path.ToLowerInvariant() + ":256:" + stamp)));
         return Path.Combine(AppPaths.IconCache, hash + ".png");
     }
 }

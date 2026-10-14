@@ -6,6 +6,8 @@ namespace CirDeck.App;
 
 internal static class DesktopBackdrop
 {
+    public static ImageSource? Current { get; private set; }
+
     public static ImageSource? Load()
     {
         try
@@ -18,16 +20,17 @@ internal static class DesktopBackdrop
 
             using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             var frame = BitmapDecoder.Create(stream, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.OnLoad).Frames[0];
-            const int width = 220;
+            const int width = 960;
             var height = Math.Max(1, (int)Math.Round(frame.PixelHeight * (width / (double)Math.Max(1, frame.PixelWidth))));
             var scaled = new TransformedBitmap(frame, new ScaleTransform(width / (double)frame.PixelWidth, height / (double)frame.PixelHeight));
             var formatted = new FormatConvertedBitmap(scaled, PixelFormats.Bgra32, null, 0);
             var stride = width * 4;
             var pixels = new byte[stride * height];
             formatted.CopyPixels(pixels, stride, 0);
-            BoxBlur(pixels, width, height, 10);
+            BoxBlur(pixels, width, height, 24);
             var result = BitmapSource.Create(width, height, 96, 96, PixelFormats.Bgra32, null, pixels, stride);
             result.Freeze();
+            Current = result;
             return result;
         }
         catch (Exception)
