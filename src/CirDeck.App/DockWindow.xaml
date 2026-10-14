@@ -8,14 +8,14 @@
         ShowActivated="False"
         Topmost="True"
         Background="Transparent"
-        AllowsTransparency="False"
+        AllowsTransparency="True"
         UseLayoutRounding="True"
         MouseMove="OnMouseMove"
         MouseLeave="OnMouseLeave"
         MouseLeftButtonUp="OnMouseUp"
         MouseRightButtonUp="OnBackgroundMenu">
     <Grid>
-        <Border Background="#33FFFFFF" BorderBrush="#66FFFFFF" BorderThickness="1" IsHitTestVisible="False"/>
+        <Border x:Name="Plate" VerticalAlignment="Bottom" Background="#2EFFFFFF" BorderBrush="#40FFFFFF" BorderThickness="1" CornerRadius="16" IsHitTestVisible="False"/>
         <Canvas x:Name="Surface"/>
     </Grid>
 </Window>

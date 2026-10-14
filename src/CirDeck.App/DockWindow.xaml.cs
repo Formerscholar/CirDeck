@@ -45,8 +45,7 @@ public partial class DockWindow : Window
         _session = session;
         _icons = icons;
         InitializeComponent();
-        SourceInitialized += (_, _) => WindowChrome.ApplyDock(new WindowInteropHelper(this).Handle);
-        SizeChanged += OnSizeChanged;
+        SizeChanged += (_, _) => { };
         _session.Changed += Rebuild;
         _icons.Ready += OnIconReady;
     }
@@ -87,20 +86,11 @@ public partial class DockWindow : Window
         base.OnClosing(e);
     }
 
-    private void OnSizeChanged(object sender, SizeChangedEventArgs e)
-    {
-        var hwnd = new WindowInteropHelper(this).Handle;
-        if (hwnd == IntPtr.Zero || e.NewSize.Width < 1 || e.NewSize.Height < 1)
-        {
-            return;
-        }
-
-        var dpi = VisualTreeHelper.GetDpi(this);
-        WindowChrome.ClipCapsule(
-            hwnd,
-            (int)Math.Ceiling(e.NewSize.Width * dpi.DpiScaleX),
-            (int)Math.Ceiling(e.NewSize.Height * dpi.DpiScaleY));
-    }
+    private const double DockIcon = 56;
+    private const double DockGap = 12;
+    private const double DockPadX = 18;
+    private const double DockPadY = 12;
+    private const double DockGrow = 1.46;
 
     private void Rebuild()
     {
@@ -127,14 +117,12 @@ public partial class DockWindow : Window
         }
 
         var settings = _session.Settings;
-        const double icon = 56;
-        const double spacing = 12;
-        const double padX = 16;
-        const double padY = 10;
-        var magnify = settings.DockMagnify ? 1.28 : 1;
-        var request = new DockRequest(_entries.Count, icon, spacing, padX, padY, magnify, double.NaN, settings.DockMagnify);
-        Width = Math.Max(160, DockGeometry.ReserveWidth(_entries.Count, icon, spacing, padX, magnify));
-        Height = padY * 2 + icon * magnify;
+        var magnify = settings.DockMagnify ? DockGrow : 1;
+        var request = new DockRequest(_entries.Count, DockIcon, DockGap, DockPadX, DockPadY, magnify, double.NaN, settings.DockMagnify);
+        var plateHeight = DockPadY * 2 + DockIcon;
+        Width = Math.Max(160, DockGeometry.ReserveWidth(_entries.Count, DockIcon, DockGap, DockPadX, magnify));
+        Height = plateHeight + DockIcon * (magnify - 1) + 12;
+        Plate.Height = plateHeight;
         _frame = DockGeometry.Place(request, _scale);
         ApplyFrame();
         if (IsVisible)
@@ -152,7 +140,7 @@ public partial class DockWindow : Window
             Height = size - 8,
             Stretch = Stretch.Uniform,
             IsHitTestVisible = false,
-            VerticalAlignment = VerticalAlignment.Top,
+            VerticalAlignment = VerticalAlignment.Center,
             HorizontalAlignment = HorizontalAlignment.Center
         };
         RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
@@ -181,7 +169,7 @@ public partial class DockWindow : Window
             Width = size,
             Height = size,
             ToolTip = entry.Name,
-            RenderTransformOrigin = new Point(0.5, 0.42),
+            RenderTransformOrigin = new Point(0.5, 1),
             Background = Brushes.Transparent
         };
         grid.Children.Add(image);
@@ -209,9 +197,9 @@ public partial class DockWindow : Window
             _entries.Count,
             56,
             12,
-            16,
-            10,
-            _session.Settings.DockMagnify ? 1.28 : 1,
+            18,
+            12,
+            _session.Settings.DockMagnify ? 1.46 : 1,
             pointerX,
             _session.Settings.DockMagnify);
     }
@@ -355,13 +343,13 @@ public partial class DockWindow : Window
 
     private void ApplyFrame()
     {
-        var icon = 56d;
         for (var i = 0; i < _frame.Poses.Count && i < _transforms.Count; i++)
         {
             var pose = _frame.Poses[i];
-            var element = (UIElement)Surface.Children[i];
-            Canvas.SetLeft(element, pose.Left + pose.Size / 2 - icon / 2);
-            Canvas.SetTop(element, pose.Top + pose.Size / 2 - icon / 2);
+            var element = (FrameworkElement)Surface.Children[i];
+            var plateTop = Height - Plate.Height;
+            Canvas.SetLeft(element, pose.Left + pose.Size / 2 - element.Width / 2);
+            Canvas.SetTop(element, plateTop + DockPadY);
             _transforms[i].ScaleX = pose.Scale;
             _transforms[i].ScaleY = pose.Scale;
         }
@@ -408,7 +396,9 @@ public partial class DockWindow : Window
         for (var i = 0; i < _frame.Poses.Count; i++)
         {
             var pose = _frame.Poses[i];
-            if (point.X < pose.Left || point.X > pose.Left + pose.Size || point.Y < pose.Top || point.Y > pose.Top + pose.Size)
+            var top = Height - Plate.Height + DockPadY + DockIcon * (1 - pose.Scale);
+            var bottom = Height - Plate.Height + DockPadY + DockIcon;
+            if (point.X < pose.Left || point.X > pose.Left + pose.Size || point.Y < top || point.Y > bottom)
             {
                 continue;
             }
