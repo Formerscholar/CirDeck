@@ -30,7 +30,8 @@ public partial class DockWindow : Window
         _session = session;
         _icons = icons;
         InitializeComponent();
-        SourceInitialized += (_, _) => WindowChrome.Round(new WindowInteropHelper(this).Handle);
+        SourceInitialized += (_, _) => WindowChrome.ApplyDock(new WindowInteropHelper(this).Handle);
+        SizeChanged += OnSizeChanged;
         _session.Changed += Rebuild;
         _icons.Ready += OnIconReady;
         MouseMove += (_, _) => EnsureTick();
@@ -69,6 +70,21 @@ public partial class DockWindow : Window
         }
 
         base.OnClosing(e);
+    }
+
+    private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        if (hwnd == IntPtr.Zero || e.NewSize.Width < 1 || e.NewSize.Height < 1)
+        {
+            return;
+        }
+
+        var dpi = VisualTreeHelper.GetDpi(this);
+        WindowChrome.ClipCapsule(
+            hwnd,
+            (int)Math.Ceiling(e.NewSize.Width * dpi.DpiScaleX),
+            (int)Math.Ceiling(e.NewSize.Height * dpi.DpiScaleY));
     }
 
     private void Rebuild()
@@ -124,7 +140,7 @@ public partial class DockWindow : Window
         {
             Width = 5,
             Height = 5,
-            Fill = new SolidColorBrush(Color.FromRgb(226, 161, 90)),
+            Fill = Brushes.White,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Bottom,
             Margin = new Thickness(0, 0, 0, -6),

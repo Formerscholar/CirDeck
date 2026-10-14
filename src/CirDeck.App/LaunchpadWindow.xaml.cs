@@ -24,7 +24,11 @@ public partial class LaunchpadWindow : Window
         _session = session;
         _icons = icons;
         InitializeComponent();
-        SourceInitialized += (_, _) => RegisterHotkey();
+        SourceInitialized += (_, _) =>
+        {
+            RegisterHotkey();
+            WindowChrome.ApplyLaunchpad(new WindowInteropHelper(this).Handle);
+        };
         _session.Changed += Refresh;
         _icons.Ready += OnIconReady;
         ApplyColumns();
@@ -99,11 +103,15 @@ public partial class LaunchpadWindow : Window
         var factory = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.Primitives.UniformGrid));
         factory.SetValue(System.Windows.Controls.Primitives.UniformGrid.ColumnsProperty, _session.Settings.Columns);
         Tiles.ItemsPanel = new ItemsPanelTemplate(factory);
-        Tiles.MaxWidth = _session.Settings.Columns * 128;
+        Tiles.MaxWidth = _session.Settings.Columns * 116;
     }
 
     private void Refresh()
     {
+        if (SearchBox == null || Tiles == null || EmptyText == null || Dots == null)
+        {
+            return;
+        }
         _results = _session.Query(SearchBox.Text);
         var pageSize = PageLayout.PageSize(_session.Settings.Columns, _session.Settings.Rows);
         var pages = PageLayout.PageCount(_results.Count, pageSize);
@@ -137,7 +145,7 @@ public partial class LaunchpadWindow : Window
         Tiles.ItemsSource = slice;
         EmptyText.Visibility = slice.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         EmptyText.Text = _session.Apps.Count == 0 ? "正在读取开始菜单…" : "没有匹配的应用";
-        CountText.Text = _results.Count + " 个应用";
+        SearchHint?.SetCurrentValue(VisibilityProperty, string.IsNullOrEmpty(SearchBox.Text) ? Visibility.Visible : Visibility.Collapsed);
         DrawDots(pages);
     }
 
@@ -152,12 +160,14 @@ public partial class LaunchpadWindow : Window
         for (var i = 0; i < pages; i++)
         {
             var index = i;
-            var dot = new System.Windows.Shapes.Ellipse
+            var active = i == _page;
+            var dot = new Border
             {
-                Width = i == _page ? 8 : 6,
-                Height = i == _page ? 8 : 6,
-                Margin = new Thickness(4, 0, 4, 0),
-                Fill = new SolidColorBrush(i == _page ? Color.FromRgb(226, 161, 90) : Color.FromRgb(90, 84, 74)),
+                Width = active ? 18 : 6,
+                Height = 6,
+                CornerRadius = new CornerRadius(3),
+                Margin = new Thickness(3.5, 0, 3.5, 0),
+                Background = new SolidColorBrush(active ? Colors.White : Color.FromArgb(96, 255, 255, 255)),
                 Cursor = Cursors.Hand
             };
             dot.MouseLeftButtonUp += (_, _) =>

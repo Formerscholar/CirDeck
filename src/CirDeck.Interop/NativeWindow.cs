@@ -52,6 +52,24 @@ internal static class NativeMethods
     [DllImport("dwmapi.dll")]
     public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmExtendFrameIntoClientArea(IntPtr hwnd, ref Margins margins);
+
+    [DllImport("gdi32.dll")]
+    public static extern IntPtr CreateRoundRectRgn(int left, int top, int right, int bottom, int widthEllipse, int heightEllipse);
+
+    [DllImport("user32.dll")]
+    public static extern int SetWindowRgn(IntPtr hwnd, IntPtr region, bool redraw);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Margins
+    {
+        public int Left;
+        public int Right;
+        public int Top;
+        public int Bottom;
+    }
+
     [DllImport("user32.dll")]
     public static extern bool SetForegroundWindow(IntPtr hwnd);
 
@@ -134,8 +152,14 @@ public static class MonitorLayout
 
 public static class WindowChrome
 {
-    public static void Round(IntPtr hwnd)
+    public static void ApplyLaunchpad(IntPtr hwnd)
     {
+        UseDarkBackdrop(hwnd, 3);
+    }
+
+    public static void ApplyDock(IntPtr hwnd)
+    {
+        UseDarkBackdrop(hwnd, 3);
         if (hwnd == IntPtr.Zero)
         {
             return;
@@ -143,6 +167,31 @@ public static class WindowChrome
 
         var preference = 2;
         NativeMethods.DwmSetWindowAttribute(hwnd, 33, ref preference, sizeof(int));
+    }
+
+    public static void ClipCapsule(IntPtr hwnd, int width, int height)
+    {
+        if (hwnd == IntPtr.Zero || width < 2 || height < 2)
+        {
+            return;
+        }
+
+        var region = NativeMethods.CreateRoundRectRgn(0, 0, width + 1, height + 1, height, height);
+        NativeMethods.SetWindowRgn(hwnd, region, true);
+    }
+
+    private static void UseDarkBackdrop(IntPtr hwnd, int backdrop)
+    {
+        if (hwnd == IntPtr.Zero)
+        {
+            return;
+        }
+
+        var dark = 1;
+        NativeMethods.DwmSetWindowAttribute(hwnd, 20, ref dark, sizeof(int));
+        NativeMethods.DwmSetWindowAttribute(hwnd, 38, ref backdrop, sizeof(int));
+        var margins = new NativeMethods.Margins { Left = -1, Right = -1, Top = -1, Bottom = -1 };
+        NativeMethods.DwmExtendFrameIntoClientArea(hwnd, ref margins);
     }
 }
 

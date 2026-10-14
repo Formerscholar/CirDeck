@@ -3,11 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
-        <SolidColorBrush x:Key="Ink" Color="#121418"/>
-        <SolidColorBrush x:Key="Plate" Color="#1C1F26"/>
-        <SolidColorBrush x:Key="Paper" Color="#F4F1EA"/>
-        <SolidColorBrush x:Key="Muted" Color="#A39E93"/>
-        <SolidColorBrush x:Key="Amber" Color="#E2A15A"/>
+        <SolidColorBrush x:Key="Paper" Color="#F5F5F7"/>
+        <SolidColorBrush x:Key="Muted" Color="#C7C7CC"/>
         <Style x:Key="TileButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{StaticResource Paper}"/>
@@ -17,16 +14,15 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="Transparent" BorderBrush="#E2A15A" BorderThickness="0" CornerRadius="14" Padding="10,8">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="22" Padding="8,10">
                             <ContentPresenter HorizontalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#241F1A"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#18FFFFFF"/>
                             </Trigger>
                             <DataTrigger Binding="{Binding Selected}" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#2A241C"/>
-                                <Setter TargetName="Bd" Property="BorderThickness" Value="1"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#2EFFFFFF"/>
                             </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -34,15 +30,28 @@
             </Setter>
         </Style>
         <Style x:Key="SearchBox" TargetType="TextBox">
-            <Setter Property="Background" Value="#1C1F26"/>
-            <Setter Property="Foreground" Value="#F4F1EA"/>
-            <Setter Property="CaretBrush" Value="#E2A15A"/>
-            <Setter Property="BorderBrush" Value="#3A342C"/>
+            <Setter Property="Background" Value="#2EFFFFFF"/>
+            <Setter Property="Foreground" Value="#F5F5F7"/>
+            <Setter Property="CaretBrush" Value="White"/>
+            <Setter Property="BorderBrush" Value="#40FFFFFF"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="FontSize" Value="18"/>
-            <Setter Property="Padding" Value="16,8"/>
-            <Setter Property="Height" Value="46"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="Padding" Value="40,0,16,0"/>
+            <Setter Property="Height" Value="40"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="20"
+                                SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </Application.Resources>
 </Application>
