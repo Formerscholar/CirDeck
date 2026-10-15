@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace CirDeck.Core;
 
 public sealed class AppSettings
@@ -78,6 +80,58 @@ public sealed class AppSettings
 
     public string LastUpdateCheck { get; set; } = "";
 
+    public bool LockIcons { get; set; }
+
+    public double PagePadX { get; set; } = 80;
+
+    public double PagePadY { get; set; } = 22;
+
+    public double ContentPadX { get; set; } = 120;
+
+    public double ContentPadTop { get; set; } = 28;
+
+    public double IconScale { get; set; } = 1;
+
+    public bool ShowAppNames { get; set; } = true;
+
+    public double NameFontSize { get; set; } = 11;
+
+    public string NameColor { get; set; } = "White";
+
+    public bool NameShadow { get; set; }
+
+    public string IconShape { get; set; } = "Rounded";
+
+    public double BlurRadius { get; set; } = 48;
+
+    public double VeilOpacity { get; set; } = 0.15;
+
+    public bool ShowSeconds { get; set; } = true;
+
+    public bool ShowClockDate { get; set; } = true;
+
+    public bool ClockTransparent { get; set; }
+
+    public double ClockFontSize { get; set; } = 58;
+
+    public string SearchMode { get; set; } = "Always";
+
+    public bool HideSettingsButton { get; set; }
+
+    public string PageSpeed { get; set; } = "Fast";
+
+    public bool ShortSwipeBounce { get; set; } = true;
+
+    public double SwipeThreshold { get; set; } = 64;
+
+    public bool ClickBounce { get; set; } = true;
+
+    public bool HoverTilt { get; set; }
+
+    public bool PauseHotCornerWhenGame { get; set; } = true;
+
+    public List<string> TrayHidden { get; set; } = new();
+
     public void Clamp()
     {
         Columns = Math.Clamp(Columns, 4, 12);
@@ -113,5 +167,49 @@ public sealed class AppSettings
         }
 
         LastUpdateCheck ??= "";
+        PagePadX = Math.Clamp(PagePadX, 0, 240);
+        PagePadY = Math.Clamp(PagePadY, 0, 160);
+        ContentPadX = Math.Clamp(ContentPadX, 0, 280);
+        ContentPadTop = Math.Clamp(ContentPadTop, 0, 160);
+        IconScale = Math.Clamp(IconScale, 0.7, 1.4);
+        NameFontSize = Math.Clamp(NameFontSize, 9, 18);
+        ClockFontSize = Math.Clamp(ClockFontSize, 36, 72);
+        BlurRadius = Math.Clamp(BlurRadius, 0, 80);
+        VeilOpacity = Math.Clamp(VeilOpacity, 0, 0.8);
+        SwipeThreshold = Math.Clamp(SwipeThreshold, 24, 160);
+        if (NameColor is not ("White" or "Black"))
+        {
+            NameColor = "White";
+        }
+
+        if (IconShape is not ("Square" or "Rounded" or "Circle"))
+        {
+            IconShape = "Rounded";
+        }
+
+        if (SearchMode is not ("Always" or "TopHover"))
+        {
+            SearchMode = "Always";
+        }
+
+        if (PageSpeed is not ("Fast" or "Normal" or "Slow"))
+        {
+            PageSpeed = "Fast";
+        }
+
+        TrayHidden ??= new List<string>();
+    }
+
+    public void CopyFrom(AppSettings source)
+    {
+        foreach (var property in typeof(AppSettings).GetProperties())
+        {
+            if (property.CanWrite)
+            {
+                property.SetValue(this, property.GetValue(source));
+            }
+        }
+
+        Clamp();
     }
 }

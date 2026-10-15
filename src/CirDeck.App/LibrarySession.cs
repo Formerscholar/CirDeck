@@ -296,6 +296,101 @@ public sealed class LibrarySession
         Changed?.Invoke();
     }
 
+    public void AddApp(AppEntry app)
+    {
+        var apps = Apps.ToList();
+        if (apps.Any(item => string.Equals(item.TargetPath, app.TargetPath, StringComparison.OrdinalIgnoreCase)))
+        {
+            return;
+        }
+
+        apps.Add(app);
+        Apps = apps;
+        JsonStore.Save(AppPaths.CatalogPath, apps.ToList());
+        if (!Library.Order.Any(item => string.Equals(item, app.TargetPath, StringComparison.OrdinalIgnoreCase)))
+        {
+            Library.Order.Add(app.TargetPath);
+            SaveLibrary();
+            return;
+        }
+
+        RebuildIndex();
+        Changed?.Invoke();
+    }
+
+    public void RemoveApp(string path)
+    {
+        Apps = Apps.Where(item => !string.Equals(item.TargetPath, path, StringComparison.OrdinalIgnoreCase)).ToList();
+        JsonStore.Save(AppPaths.CatalogPath, Apps.ToList());
+        Library.Order.RemoveAll(item => string.Equals(item, path, StringComparison.OrdinalIgnoreCase));
+        Unpin(Apps.FirstOrDefault(item => string.Equals(item.TargetPath, path, StringComparison.OrdinalIgnoreCase)) ?? new AppEntry("", path, "", "", ""));
+        SaveLibrary();
+    }
+
+    public void ResetLibrary()
+    {
+        Library = new UserLibrary();
+        JsonStore.Save(AppPaths.LibraryPath, Library);
+        Rescan();
+    }
+
+    public int CollectDesktop(bool apps)
+    {
+        var count = DesktopVault.Collect(apps);
+        foreach (var app in DesktopVault.TakenApps())
+        {
+            AddApp(app);
+        }
+
+        return count;
+    }
+
+    public int RestoreDesktop()
+    {
+        return DesktopVault.Restore();
+    }
+
+    public void SaveSnapshot(string name)
+    {
+        Directory.CreateDirectory(AppPaths.SnapshotsDirectory);
+        var id = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+        JsonStore.Save(Path.Combine(AppPaths.SnapshotsDirectory, id + ".json"), CaptureBundle(string.IsNullOrWhiteSpace(name) ? "桌面" : name.Trim()));
+    }
+
+    public IReadOnlyList<(string Id, string Name)> Snapshots()
+    {
+        if (!Directory.Exists(AppPaths.SnapshotsDirectory))
+        {
+            return Array.Empty<(string, string)>();
+        }
+
+        return Directory.EnumerateFiles(AppPaths.SnapshotsDirectory, "*.json")
+            .OrderByDescending(file => file)
+            .Select(file =>
+            {
+                var bundle = JsonStore.Load(file, () => new WorkspaceBundle());
+                return (Path.GetFileNameWithoutExtension(file), bundle.Name + "  " + Path.GetFileNameWithoutExtension(file));
+            })
+            .ToList();
+    }
+
+    public void ExportWorkspace(string path)
+    {
+        JsonStore.Save(path, CaptureBundle("导出"));
+    }
+
+    public void ImportWorkspace(string path)
+    {
+        ApplyBundle(JsonStore.Load(path, () => new WorkspaceBundle()));
+        SaveSettings();
+    }
+
+    public void RestoreSnapshot(string id)
+    {
+        ApplyBundle(JsonStore.Load(Path.Combine(AppPaths.SnapshotsDirectory, id + ".json"), () => new WorkspaceBundle()));
+        SaveSettings();
+    }
+
     public void Rescan()
     {
         var thread = new Thread(() =>
@@ -391,27 +486,7 @@ public sealed class LibrarySession
 
     private void ApplyBundle(WorkspaceBundle bundle)
     {
-        var source = bundle.Settings ?? new AppSettings();
-        Settings.Columns = source.Columns;
-        Settings.Rows = source.Rows;
-        Settings.CloseAfterLaunch = source.CloseAfterLaunch;
-        Settings.OpenLaunchpadAtStartup = source.OpenLaunchpadAtStartup;
-        Settings.ShowDock = source.ShowDock;
-        Settings.DockIconSize = source.DockIconSize;
-        Settings.DockSpacing = source.DockSpacing;
-        Settings.DockPadding = source.DockPadding;
-        Settings.DockMagnify = source.DockMagnify;
-        Settings.DockMagnifyScale = source.DockMagnifyScale;
-        Settings.MaxDockItems = source.MaxDockItems;
-        Settings.ShowRunningIndicators = source.ShowRunningIndicators;
-        Settings.LaunchAtStartup = source.LaunchAtStartup;
-        Settings.EnableHotCorner = source.EnableHotCorner;
-        Settings.HotCorner = source.HotCorner;
-        Settings.ShowClock = source.ShowClock;
-        Settings.ShowSystemMonitor = source.ShowSystemMonitor;
-        Settings.ShowMusicSpectrum = source.ShowMusicSpectrum;
-        Settings.ScanSteam = source.ScanSteam;
-        Settings.Clamp();
+        Settings.CopyFrom(bundle.Settings ?? new AppSettings());
         DockPins = bundle.DockPins ?? new List<string>();
         Library = bundle.Library ?? new UserLibrary();
         JsonStore.Save(AppPaths.DockPath, DockPins.ToList());

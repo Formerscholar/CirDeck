@@ -91,11 +91,12 @@ public partial class SettingsWindow : Window
         GrowSlider.Value = settings.DockMagnifyScale;
         BottomSlider.Value = settings.DockBottomGap;
         WriteDockLabels();
+        BindExtras(settings);
         ReloadLayouts();
         ReloadHidden();
         ShowPage(NavGeneral);
         _ready = true;
-        foreach (var box in new[] { StartupBox, OpenAtStartupBox, CloseAfterBox, ShowDockBox, MagnifyBox, RunningBox, ClockBox, MonitorBox, MusicBox, SteamBox, CornerBox, DesktopBox, AutoUpdateBox, ResidentBox, RunningAppsBox, MergeBox, DockClockBox, RecycleBox, HideTaskbarBox, DockCornerBox, LaunchCornerBox, FullscreenPauseBox, BounceBox })
+        foreach (var box in new[] { StartupBox, OpenAtStartupBox, CloseAfterBox, ShowDockBox, MagnifyBox, RunningBox, ClockBox, MonitorBox, MusicBox, SteamBox, CornerBox, DesktopBox, AutoUpdateBox, ResidentBox, RunningAppsBox, MergeBox, DockClockBox, RecycleBox, HideTaskbarBox, DockCornerBox, LaunchCornerBox, FullscreenPauseBox, BounceBox, LockBox, ShowNamesBox, NameShadowBox, SecondsBox, DateBox, ClockClearBox, TopSearchBox, HideGearBox, ShortBounceBox, ClickBounceBox, HoverTiltBox, GamePauseBox })
         {
             box.Checked += (_, _) => SaveFlags();
             box.Unchecked += (_, _) => SaveFlags();
@@ -106,6 +107,55 @@ public partial class SettingsWindow : Window
         MaterialCombo.SelectionChanged += (_, _) => SaveFlags();
         DockCornerCombo.SelectionChanged += (_, _) => SaveFlags();
         LaunchCornerCombo.SelectionChanged += (_, _) => SaveFlags();
+        ShapeCombo.SelectionChanged += (_, _) => SaveFlags();
+        NameColorCombo.SelectionChanged += (_, _) => SaveFlags();
+        SpeedCombo.SelectionChanged += (_, _) => SaveFlags();
+        ColumnsCombo.SelectionChanged += (_, _) => SaveFlags();
+        RowsCombo.SelectionChanged += (_, _) => SaveFlags();
+    }
+
+    private List<(string Id, string Name)> _snapshots = new();
+
+    private void BindExtras(AppSettings settings)
+    {
+        ShapeCombo.ItemsSource = new[] { new Choice("Square", "方形"), new Choice("Rounded", "圆角"), new Choice("Circle", "圆形") };
+        ShapeCombo.SelectedValue = settings.IconShape;
+        NameColorCombo.ItemsSource = new[] { new Choice("White", "白字"), new Choice("Black", "黑字") };
+        NameColorCombo.SelectedValue = settings.NameColor;
+        SpeedCombo.ItemsSource = new[] { new Choice("Fast", "快速"), new Choice("Normal", "自然"), new Choice("Slow", "平缓") };
+        SpeedCombo.SelectedValue = settings.PageSpeed;
+        ColumnsCombo.ItemsSource = Enumerable.Range(4, 9).ToList();
+        ColumnsCombo.SelectedItem = settings.Columns;
+        RowsCombo.ItemsSource = Enumerable.Range(2, 7).ToList();
+        RowsCombo.SelectedItem = settings.Rows;
+        IconScaleSlider.Value = settings.IconScale * 100;
+        NameSizeSlider.Value = settings.NameFontSize;
+        BlurSlider.Value = settings.BlurRadius;
+        VeilSlider.Value = settings.VeilOpacity * 100;
+        PageXSlider.Value = settings.PagePadX;
+        PageYSlider.Value = settings.PagePadY;
+        ContentXSlider.Value = settings.ContentPadX;
+        ContentTopSlider.Value = settings.ContentPadTop;
+        ClockSizeSlider.Value = settings.ClockFontSize;
+        LockBox.IsChecked = settings.LockIcons;
+        ShowNamesBox.IsChecked = settings.ShowAppNames;
+        NameShadowBox.IsChecked = settings.NameShadow;
+        SecondsBox.IsChecked = settings.ShowSeconds;
+        DateBox.IsChecked = settings.ShowClockDate;
+        ClockClearBox.IsChecked = settings.ClockTransparent;
+        TopSearchBox.IsChecked = settings.SearchMode == "TopHover";
+        HideGearBox.IsChecked = settings.HideSettingsButton;
+        ShortBounceBox.IsChecked = settings.ShortSwipeBounce;
+        ClickBounceBox.IsChecked = settings.ClickBounce;
+        HoverTiltBox.IsChecked = settings.HoverTilt;
+        GamePauseBox.IsChecked = settings.PauseHotCornerWhenGame;
+        ReloadSnapshots();
+    }
+
+    private void ReloadSnapshots()
+    {
+        _snapshots = _session.Snapshots().ToList();
+        SnapshotList.ItemsSource = _snapshots.Select(item => item.Name).ToList();
     }
 
     private void OnDockMetric(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -137,7 +187,7 @@ public partial class SettingsWindow : Window
 
     private void ShowPage(Button selected)
     {
-        foreach (var button in new[] { NavGeneral, NavDock, NavLayout, NavWidgets, NavMotion, NavApps })
+        foreach (var button in new[] { NavGeneral, NavDock, NavLook, NavLayout, NavWidgets, NavMotion, NavApps })
         {
             button.Background = Brushes.Transparent;
             button.Foreground = new SolidColorBrush(Color.FromRgb(242, 242, 247));
@@ -147,6 +197,7 @@ public partial class SettingsWindow : Window
         selected.Foreground = Brushes.White;
         PageGeneral.Visibility = selected == NavGeneral ? Visibility.Visible : Visibility.Collapsed;
         PageDock.Visibility = selected == NavDock ? Visibility.Visible : Visibility.Collapsed;
+        PageLook.Visibility = selected == NavLook ? Visibility.Visible : Visibility.Collapsed;
         PageLayout.Visibility = selected == NavLayout ? Visibility.Visible : Visibility.Collapsed;
         PageWidgets.Visibility = selected == NavWidgets ? Visibility.Visible : Visibility.Collapsed;
         PageMotion.Visibility = selected == NavMotion ? Visibility.Visible : Visibility.Collapsed;
@@ -156,6 +207,7 @@ public partial class SettingsWindow : Window
         {
             nameof(NavGeneral) => "开机自启、全局快捷键、多显示器行为与检查更新",
             nameof(NavDock) => "桌面 Dock、触发角与图标外观",
+            nameof(NavLook) => "图标形状、名称样式、壁纸模糊与遮罩",
             nameof(NavLayout) => "切换、保存、导入和导出布局",
             nameof(NavWidgets) => "时钟、系统占用、频谱和 Steam",
             nameof(NavMotion) => "用屏幕热角唤出启动台",
@@ -192,6 +244,51 @@ public partial class SettingsWindow : Window
         settings.DockSpacing = GapSlider.Value;
         settings.DockMagnifyScale = GrowSlider.Value;
         settings.DockBottomGap = BottomSlider.Value;
+        settings.LockIcons = LockBox.IsChecked == true;
+        settings.ShowAppNames = ShowNamesBox.IsChecked == true;
+        settings.NameShadow = NameShadowBox.IsChecked == true;
+        settings.ShowSeconds = SecondsBox.IsChecked == true;
+        settings.ShowClockDate = DateBox.IsChecked == true;
+        settings.ClockTransparent = ClockClearBox.IsChecked == true;
+        settings.HideSettingsButton = HideGearBox.IsChecked == true;
+        settings.SearchMode = TopSearchBox.IsChecked == true ? "TopHover" : "Always";
+        settings.ShortSwipeBounce = ShortBounceBox.IsChecked == true;
+        settings.ClickBounce = ClickBounceBox.IsChecked == true;
+        settings.HoverTilt = HoverTiltBox.IsChecked == true;
+        settings.PauseHotCornerWhenGame = GamePauseBox.IsChecked == true;
+        settings.IconScale = IconScaleSlider.Value / 100;
+        settings.NameFontSize = NameSizeSlider.Value;
+        settings.BlurRadius = BlurSlider.Value;
+        settings.VeilOpacity = VeilSlider.Value / 100;
+        settings.PagePadX = PageXSlider.Value;
+        settings.PagePadY = PageYSlider.Value;
+        settings.ContentPadX = ContentXSlider.Value;
+        settings.ContentPadTop = ContentTopSlider.Value;
+        settings.ClockFontSize = ClockSizeSlider.Value;
+        if (ColumnsCombo.SelectedItem is int columns)
+        {
+            settings.Columns = columns;
+        }
+
+        if (RowsCombo.SelectedItem is int rows)
+        {
+            settings.Rows = rows;
+        }
+
+        if (ShapeCombo.SelectedValue is string shape)
+        {
+            settings.IconShape = shape;
+        }
+
+        if (NameColorCombo.SelectedValue is string nameColor)
+        {
+            settings.NameColor = nameColor;
+        }
+
+        if (SpeedCombo.SelectedValue is string speed)
+        {
+            settings.PageSpeed = speed;
+        }
         if (MaterialCombo.SelectedValue is string material)
         {
             settings.DockMaterial = material;
@@ -292,6 +389,73 @@ public partial class SettingsWindow : Window
         ScreenCombo.SelectedValue = settings.DisplayScreen;
         _ready = true;
         _session.CommitSettings();
+    }
+
+    private void OnCollectApps(object sender, RoutedEventArgs e)
+    {
+        _session.CollectDesktop(true);
+    }
+
+    private void OnCollectFiles(object sender, RoutedEventArgs e)
+    {
+        _session.CollectDesktop(false);
+    }
+
+    private void OnRestoreDesktop(object sender, RoutedEventArgs e)
+    {
+        _session.RestoreDesktop();
+    }
+
+    private void OnAddProgram(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog { Filter = "程序|*.exe;*.lnk" };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        _session.AddApp(new AppEntry(Path.GetFileNameWithoutExtension(dialog.FileName), dialog.FileName, "", Path.GetDirectoryName(dialog.FileName) ?? "", "Manual"));
+    }
+
+    private void OnResetLibrary(object sender, RoutedEventArgs e)
+    {
+        _session.ResetLibrary();
+    }
+
+    private void OnExportSettings(object sender, RoutedEventArgs e)
+    {
+        var dialog = new SaveFileDialog { Filter = "CirDeck 设置|*.json", FileName = "cirdeck-settings.json" };
+        if (dialog.ShowDialog() == true)
+        {
+            _session.ExportWorkspace(dialog.FileName);
+        }
+    }
+
+    private void OnImportSettings(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog { Filter = "CirDeck 设置|*.json" };
+        if (dialog.ShowDialog() == true)
+        {
+            _session.ImportWorkspace(dialog.FileName);
+            Close();
+        }
+    }
+
+    private void OnSaveSnapshot(object sender, RoutedEventArgs e)
+    {
+        _session.SaveSnapshot("桌面");
+        ReloadSnapshots();
+    }
+
+    private void OnRestoreSnapshot(object sender, RoutedEventArgs e)
+    {
+        if (SnapshotList.SelectedIndex < 0 || SnapshotList.SelectedIndex >= _snapshots.Count)
+        {
+            return;
+        }
+
+        _session.RestoreSnapshot(_snapshots[SnapshotList.SelectedIndex].Id);
+        Close();
     }
 
     private void OnCheckUpdate(object sender, RoutedEventArgs e)

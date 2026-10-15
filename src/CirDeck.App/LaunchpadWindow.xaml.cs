@@ -54,7 +54,7 @@ public partial class LaunchpadWindow : Window
         {
             RegisterHotkey();
             WindowChrome.ApplyLaunchpad(new WindowInteropHelper(this).Handle);
-            Backdrop.Source = DesktopBackdrop.Load();
+            Backdrop.Source = DesktopBackdrop.Load(_session.Settings.BlurRadius);
         };
         _session.Changed += Refresh;
         _icons.Ready += OnIconReady;
@@ -143,8 +143,9 @@ public partial class LaunchpadWindow : Window
         var rows = Math.Max(1, _session.Settings.Rows);
         var width = ActualWidth > 240 ? ActualWidth : 1600;
         var height = ActualHeight > 240 ? ActualHeight : 1000;
-        _cellW = Math.Min(CellWidth, Math.Max(128, (width - 80) / columns));
-        _cellH = Math.Min(CellHeight, Math.Max(118, (height - 430) / rows));
+        var gap = _session.Settings.DockSpacing;
+        _cellW = Math.Min(220, Math.Max(108, (width - _session.Settings.ContentPadX) / columns)) + gap * 0.35;
+        _cellH = Math.Min(200, Math.Max(96, (height - 360 - _session.Settings.ContentPadTop) / rows));
         FitTiles();
     }
 
@@ -221,6 +222,7 @@ public partial class LaunchpadWindow : Window
         }
 
         FitTiles();
+        ApplyLook();
         DrawDots(pages);
         UpdateWidgets();
     }
@@ -287,6 +289,14 @@ public partial class LaunchpadWindow : Window
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
         var columns = _session.Settings.Columns;
+        if (e.Key == Key.L && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+        {
+            _session.Settings.LockIcons = !_session.Settings.LockIcons;
+            _session.CommitSettings();
+            e.Handled = true;
+            return;
+        }
+
         if (e.Key == Key.Escape)
         {
             if (!string.IsNullOrEmpty(_session.OpenFolderId))
@@ -421,7 +431,13 @@ public partial class LaunchpadWindow : Window
             dt = 1d / 60;
         }
 
-        var omega = _slideExit ? 26d : 18d;
+        var pace = _session.Settings.PageSpeed switch
+        {
+            "Slow" => 0.65,
+            "Normal" => 0.85,
+            _ => 1d
+        };
+        var omega = (_slideExit ? 26d : 18d) * pace;
         _slide.X += (_slideTarget - _slide.X) * (1 - Math.Exp(-omega * dt));
         if (Math.Abs(_slideTarget - _slide.X) > 0.8)
         {
@@ -498,7 +514,123 @@ public partial class LaunchpadWindow : Window
 
         if (tile.Entry != null)
         {
+            if (_session.Settings.ClickBounce)
+            {
+                button.RenderTransformOrigin = new Point(0.5, 0.5);
+                button.RenderTransform = new ScaleTransform(0.9, 0.9);
+            }
+
             LaunchRequested?.Invoke(tile.Entry);
+        }
+    }
+
+    private void OnTileLoaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button)
+        {
+            return;
+        }
+
+        ApplyTile(button);
+    }
+
+    private void OnTileEnter(object sender, MouseEventArgs e)
+    {
+        if (!_session.Settings.HoverTilt || sender is not Button button)
+        {
+            return;
+        }
+
+        button.RenderTransformOrigin = new Point(0.5, 0.8);
+        button.RenderTransform = new RotateTransform(-8);
+    }
+
+    private void OnTileLeave(object sender, MouseEventArgs e)
+    {
+        if (sender is Button button)
+        {
+            button.RenderTransform = Transform.Identity;
+        }
+    }
+
+    private void ApplyLook()
+    {
+        if (Stage == null || Veil == null || SearchChrome == null)
+        {
+            return;
+        }
+
+        var settings = _session.Settings;
+        Stage.Margin = new Thickness(settings.PagePadX, 52 + settings.ContentPadTop, settings.PagePadX, 100 + settings.PagePadY);
+        Veil.Opacity = settings.VeilOpacity;
+        Backdrop.Source = DesktopBackdrop.Load(settings.BlurRadius);
+        SettingsButton.Visibility = settings.HideSettingsButton ? Visibility.Collapsed : Visibility.Visible;
+        SearchChrome.Visibility = settings.SearchMode == "TopHover" && Mouse.GetPosition(this).Y > 72
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+        DateText.Visibility = settings.ShowClockDate ? Visibility.Visible : Visibility.Collapsed;
+        SecondCard.Visibility = settings.ShowSeconds ? Visibility.Visible : Visibility.Collapsed;
+        var clockFill = settings.ClockTransparent ? Brushes.Transparent : new SolidColorBrush(Color.FromArgb(0xF0, 0x14, 0x14, 0x18));
+        HourCard.Background = clockFill;
+        MinuteCard.Background = clockFill;
+        SecondCard.Background = clockFill;
+        HourText.FontSize = settings.ClockFontSize;
+        MinuteText.FontSize = settings.ClockFontSize;
+        SecondText.FontSize = settings.ClockFontSize;
+        var nameBrush = settings.NameColor == "Black" ? Brushes.Black : Brushes.White;
+        foreach (var button in FindVisuals<Button>(Tiles))
+        {
+            ApplyTile(button, nameBrush);
+        }
+    }
+
+    private void ApplyTile(Button button, Brush? nameBrush = null)
+    {
+        var settings = _session.Settings;
+        nameBrush ??= settings.NameColor == "Black" ? Brushes.Black : Brushes.White;
+        var image = FindVisuals<Image>(button).FirstOrDefault();
+        if (image != null)
+        {
+            var size = 58 * settings.IconScale;
+            image.Width = size;
+            image.Height = size;
+            image.Clip = settings.IconShape switch
+            {
+                "Circle" => new EllipseGeometry(new Point(size / 2, size / 2), size / 2, size / 2),
+                "Square" => new RectangleGeometry(new Rect(0, 0, size, size)),
+                _ => new RectangleGeometry(new Rect(0, 0, size, size), 14, 14)
+            };
+        }
+
+        var label = FindVisuals<TextBlock>(button).FirstOrDefault(item => item.Text != null && item.FontFamily.Source != "Segoe MDL2 Assets");
+        if (label == null)
+        {
+            return;
+        }
+
+        label.Visibility = settings.ShowAppNames ? Visibility.Visible : Visibility.Collapsed;
+        label.FontSize = settings.NameFontSize;
+        label.Foreground = nameBrush;
+        label.Effect = settings.NameShadow
+            ? new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 4, ShadowDepth = 0, Opacity = 0.8, Color = Colors.Black }
+            : null;
+    }
+
+    private static IEnumerable<T> FindVisuals<T>(DependencyObject root) where T : DependencyObject
+    {
+        var count = VisualTreeHelper.GetChildrenCount(root);
+        for (var i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is T match)
+            {
+                yield return match;
+            }
+
+            foreach (var nested in FindVisuals<T>(child))
+            {
+                yield return nested;
+            }
         }
     }
 
@@ -522,6 +654,11 @@ public partial class LaunchpadWindow : Window
 
     private void OnPointerMove(object sender, MouseEventArgs e)
     {
+        if (_session.Settings.SearchMode == "TopHover" && SearchChrome != null)
+        {
+            SearchChrome.Visibility = e.GetPosition(this).Y < 72 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
         if (!IsMouseCaptured || e.LeftButton != MouseButtonState.Pressed)
         {
             return;
@@ -647,6 +784,19 @@ public partial class LaunchpadWindow : Window
     private double LimitEdge(double offset)
     {
         var pages = PageLayout.PageCount(_results.Count, PageLayout.PageSize(_session.Settings.Columns, _session.Settings.Rows));
+        if (!_session.Settings.ShortSwipeBounce)
+        {
+            if (_page <= 0 && offset > 0)
+            {
+                return 0;
+            }
+
+            if (_page >= pages - 1 && offset < 0)
+            {
+                return 0;
+            }
+        }
+
         if (_page <= 0 && offset > 0)
         {
             return Math.Min(offset, 24);
@@ -805,7 +955,7 @@ public partial class LaunchpadWindow : Window
         var point = e.GetPosition(this);
         var dx = point.X - _pressPoint.X;
         var dy = point.Y - _pressPoint.Y;
-        var horizontal = _dragged && Math.Abs(dx) > 64 && Math.Abs(dx) > Math.Abs(dy);
+        var horizontal = _dragged && Math.Abs(dx) > _session.Settings.SwipeThreshold && Math.Abs(dx) > Math.Abs(dy);
         Mouse.Capture(null);
 
         if (horizontal && string.IsNullOrWhiteSpace(SearchBox.Text))
@@ -838,7 +988,7 @@ public partial class LaunchpadWindow : Window
         }
 
         var target = TileUnder(point);
-        if (target != null && !string.Equals(target.Tile.Key, _pressed.Tile.Key, StringComparison.OrdinalIgnoreCase))
+        if (!_session.Settings.LockIcons && target != null && !string.Equals(target.Tile.Key, _pressed.Tile.Key, StringComparison.OrdinalIgnoreCase))
         {
             _session.MoveTile(_pressed.Tile.Key, target.Tile.Key);
         }

@@ -189,6 +189,12 @@
                                 <TextBlock Text="程序坞" FontSize="15" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
+                        <Button x:Name="NavLook" Tag="外观与图标" Style="{StaticResource NavButton}" Click="OnNav">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE790;" FontFamily="Segoe MDL2 Assets" FontSize="15" Width="22" VerticalAlignment="Center"/>
+                                <TextBlock Text="外观与图标" FontSize="15" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                         <Button x:Name="NavLayout" Tag="布局与网格" Style="{StaticResource NavButton}" Click="OnNav">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE8FD;" FontFamily="Segoe MDL2 Assets" FontSize="15" Width="22" VerticalAlignment="Center"/>
@@ -460,12 +466,95 @@
                             </Border>
                             <TextBlock Text="把应用拖到启动台里固定，或在 Dock 图标上右键固定。" Foreground="#8E8E93" FontSize="12" Margin="6,4,0,0"/>
                         </StackPanel>
+                        <StackPanel x:Name="PageLook" Visibility="Collapsed">
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="图标形状" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <ComboBox x:Name="ShapeCombo" Style="{StaticResource DarkCombo}" Width="140" Margin="0,0,16,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="64">
+                                        <StackPanel Margin="18,8">
+                                            <TextBlock Text="图标大小" Style="{StaticResource RowTitle}"/>
+                                            <Slider x:Name="IconScaleSlider" Minimum="70" Maximum="140" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,8,0,0" ValueChanged="OnDockMetric"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="显示应用名称" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <CheckBox x:Name="ShowNamesBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="名称字号" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <Slider x:Name="NameSizeSlider" Width="180" Minimum="9" Maximum="18" TickFrequency="1" IsSnapToTickEnabled="True" HorizontalAlignment="Right" Margin="0,0,16,0" ValueChanged="OnDockMetric"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="名称颜色" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <ComboBox x:Name="NameColorCombo" Style="{StaticResource DarkCombo}" Width="120" Margin="0,0,16,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="名称文字阴影" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <CheckBox x:Name="NameShadowBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="壁纸模糊" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <Slider x:Name="BlurSlider" Width="180" Minimum="0" Maximum="80" TickFrequency="1" IsSnapToTickEnabled="True" HorizontalAlignment="Right" Margin="0,0,16,0" ValueChanged="OnDockMetric"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="遮罩浓度" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <Slider x:Name="VeilSlider" Width="180" Minimum="0" Maximum="80" TickFrequency="1" IsSnapToTickEnabled="True" HorizontalAlignment="Right" Margin="0,0,16,0" ValueChanged="OnDockMetric"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                            <TextBlock Text="背景使用当前桌面壁纸。主题图片包不做。" Foreground="#8E8E93" FontSize="12" Margin="6,0,0,8"/>
+                        </StackPanel>
                         <StackPanel x:Name="PageLayout" Visibility="Collapsed">
                             <Border Style="{StaticResource Card}">
-                                <Grid MinHeight="64">
-                                    <TextBlock Text="当前布局" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                    <ComboBox x:Name="LayoutCombo" Style="{StaticResource DarkCombo}" Width="180" Margin="0,0,16,0"/>
-                                </Grid>
+                                <StackPanel>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="锁定图标" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <CheckBox x:Name="LockBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="每页列数 / 行数" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,16,0">
+                                            <ComboBox x:Name="ColumnsCombo" Style="{StaticResource DarkCombo}" Width="72" Margin="0,0,8,0"/>
+                                            <ComboBox x:Name="RowsCombo" Style="{StaticResource DarkCombo}" Width="72"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="页面左右边距" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <Slider x:Name="PageXSlider" Width="180" Minimum="0" Maximum="240" TickFrequency="1" IsSnapToTickEnabled="True" HorizontalAlignment="Right" Margin="0,0,16,0" ValueChanged="OnDockMetric"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="页面上下边距" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <Slider x:Name="PageYSlider" Width="180" Minimum="0" Maximum="160" TickFrequency="1" IsSnapToTickEnabled="True" HorizontalAlignment="Right" Margin="0,0,16,0" ValueChanged="OnDockMetric"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="内容左右留白" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <Slider x:Name="ContentXSlider" Width="180" Minimum="0" Maximum="280" TickFrequency="1" IsSnapToTickEnabled="True" HorizontalAlignment="Right" Margin="0,0,16,0" ValueChanged="OnDockMetric"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="内容顶部留白" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <Slider x:Name="ContentTopSlider" Width="180" Minimum="0" Maximum="160" TickFrequency="1" IsSnapToTickEnabled="True" HorizontalAlignment="Right" Margin="0,0,16,0" ValueChanged="OnDockMetric"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="64">
+                                        <TextBlock Text="当前布局" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <ComboBox x:Name="LayoutCombo" Style="{StaticResource DarkCombo}" Width="180" Margin="0,0,16,0"/>
+                                    </Grid>
+                                </StackPanel>
                             </Border>
                             <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                                 <Button Content="切换" Style="{StaticResource QuietButton}" Margin="0,0,8,0" Click="OnSwitchLayout"/>
@@ -496,6 +585,36 @@
                                         <TextBlock Text="扫描 Steam 游戏" Style="{StaticResource RowTitle}" Margin="18,0"/>
                                         <CheckBox x:Name="SteamBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="显示秒数" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <CheckBox x:Name="SecondsBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="大时钟显示日期" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <CheckBox x:Name="DateBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="时钟透明背景" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <CheckBox x:Name="ClockClearBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="时钟字号" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <Slider x:Name="ClockSizeSlider" Width="180" Minimum="36" Maximum="72" TickFrequency="1" IsSnapToTickEnabled="True" HorizontalAlignment="Right" Margin="0,0,16,0" ValueChanged="OnDockMetric"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="鼠标移到顶部显示搜索" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <CheckBox x:Name="TopSearchBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="隐藏设置按钮" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <CheckBox x:Name="HideGearBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -512,8 +631,82 @@
                                     </StackPanel>
                                 </Grid>
                             </Border>
+                            <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                                <StackPanel>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="翻页速度" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <ComboBox x:Name="SpeedCombo" Style="{StaticResource DarkCombo}" Width="120" Margin="0,0,16,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="短距离滑动回弹" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <CheckBox x:Name="ShortBounceBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="点击弹性" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <CheckBox x:Name="ClickBounceBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="悬停倾斜" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <CheckBox x:Name="HoverTiltBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="前台全屏游戏时暂停触发角" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <CheckBox x:Name="GamePauseBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                         <StackPanel x:Name="PageApps" Visibility="Collapsed">
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="收纳桌面快捷方式" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <Button Content="收纳应用" Style="{StaticResource QuietButton}" HorizontalAlignment="Right" Margin="0,0,16,0" Click="OnCollectApps"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="收纳桌面文件" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <Button Content="收纳文件" Style="{StaticResource QuietButton}" HorizontalAlignment="Right" Margin="0,0,16,0" Click="OnCollectFiles"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="还原到桌面" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <Button Content="还原" Style="{StaticResource QuietButton}" HorizontalAlignment="Right" Margin="0,0,16,0" Click="OnRestoreDesktop"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="手动添加程序" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <Button Content="选择程序" Style="{StaticResource QuietButton}" HorizontalAlignment="Right" Margin="0,0,16,0" Click="OnAddProgram"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="重置应用数据库" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <Button Content="重置" Style="{StaticResource DangerButton}" HorizontalAlignment="Right" Margin="0,0,16,0" Click="OnResetLibrary"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="导出 / 导入设置" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,16,0">
+                                            <Button Content="导出" Style="{StaticResource QuietButton}" Margin="0,0,8,0" Click="OnExportSettings"/>
+                                            <Button Content="导入" Style="{StaticResource QuietButton}" Click="OnImportSettings"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="保存当前桌面" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <Button Content="保存快照" Style="{StaticResource QuietButton}" HorizontalAlignment="Right" Margin="0,0,16,0" Click="OnSaveSnapshot"/>
+                                    </Grid>
+                                    <ListBox x:Name="SnapshotList" Height="120" Margin="12,0,12,8" Background="Transparent" Foreground="White" BorderThickness="0"/>
+                                    <Button Content="恢复选中快照" Style="{StaticResource QuietButton}" HorizontalAlignment="Left" Margin="12,0,0,12" Click="OnRestoreSnapshot"/>
+                                </StackPanel>
+                            </Border>
                             <TextBlock Text="已隐藏的应用" Style="{StaticResource Section}"/>
                             <Border Style="{StaticResource Card}" Padding="6">
                                 <ListBox x:Name="HiddenList" Height="280" Background="Transparent" Foreground="#F5F5F7" BorderThickness="0">

@@ -367,7 +367,7 @@ public static class HotkeyWindow
         return NativeMethods.RegisterHotKey(
             hwnd,
             Id,
-            NativeMethods.ModControl | NativeMethods.ModAlt | NativeMethods.ModNoRepeat,
+            NativeMethods.ModAlt | NativeMethods.ModNoRepeat,
             0x20);
     }
 

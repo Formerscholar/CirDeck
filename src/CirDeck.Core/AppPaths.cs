@@ -23,4 +23,10 @@ public static class AppPaths
     public static string LibraryPath => Path.Combine(RoamingRoot, "library.json");
 
     public static string LayoutsDirectory => Path.Combine(RoamingRoot, "layouts");
+
+    public static string VaultDirectory => Path.Combine(RoamingRoot, "vault");
+
+    public static string VaultManifest => Path.Combine(VaultDirectory, "manifest.json");
+
+    public static string SnapshotsDirectory => Path.Combine(RoamingRoot, "snapshots");
 }

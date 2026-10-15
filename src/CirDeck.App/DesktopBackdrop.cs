@@ -9,7 +9,7 @@ internal static class DesktopBackdrop
 {
     public static ImageSource? Current { get; private set; }
 
-    public static ImageSource? Load()
+    public static ImageSource? Load(double blurRadius = 48)
     {
         try
         {
@@ -33,7 +33,7 @@ internal static class DesktopBackdrop
                 Stretch = Stretch.UniformToFill,
                 Effect = new System.Windows.Media.Effects.BlurEffect
                 {
-                    Radius = 48,
+                    Radius = Math.Clamp(blurRadius, 0, 80),
                     KernelType = System.Windows.Media.Effects.KernelType.Gaussian,
                     RenderingBias = System.Windows.Media.Effects.RenderingBias.Quality
                 }

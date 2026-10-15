@@ -44,8 +44,10 @@ public partial class TrayPanelWindow : Window
             icons = Array.Empty<TrayIcon>();
         }
 
-        EmptyText.Visibility = icons.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        foreach (var icon in icons)
+        var hidden = new HashSet<string>(_session.Settings.TrayHidden ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+        var visible = icons.Where(icon => !hidden.Contains(icon.Name)).OrderBy(icon => icon.Name).ToList();
+        EmptyText.Visibility = visible.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var icon in visible)
         {
             Icons.Children.Add(CreateIcon(icon));
         }
@@ -81,7 +83,24 @@ public partial class TrayPanelWindow : Window
         button.Click += (_, _) => icon.Click(false);
         button.MouseRightButtonUp += (_, args) =>
         {
-            icon.Click(true);
+            var menu = new ContextMenu();
+            var open = new MenuItem { Header = "打开" };
+            open.Click += (_, _) => icon.Click(false);
+            var hide = new MenuItem { Header = "从托盘面板隐藏" };
+            hide.Click += (_, _) =>
+            {
+                _session.Settings.TrayHidden ??= new List<string>();
+                if (!_session.Settings.TrayHidden.Any(item => string.Equals(item, icon.Name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    _session.Settings.TrayHidden.Add(icon.Name);
+                    _session.CommitSettings();
+                }
+
+                RefreshIcons();
+            };
+            menu.Items.Add(open);
+            menu.Items.Add(hide);
+            menu.IsOpen = true;
             args.Handled = true;
         };
         return button;

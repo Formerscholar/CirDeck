@@ -118,9 +118,11 @@ public partial class DockWindow : Window
     private const double DockPadX = 18;
     private const double DockPadY = 12;
 
-    private double IconSize => _session.Settings.DockIconSize;
+    private double _iconFit = 1;
 
-    private double IconGap => _session.Settings.DockSpacing;
+    private double IconSize => _session.Settings.DockIconSize * _iconFit;
+
+    private double IconGap => _session.Settings.DockSpacing * _iconFit;
 
     private double IconGrow => _session.Settings.DockMagnify ? _session.Settings.DockMagnifyScale : 1;
 
@@ -149,6 +151,7 @@ public partial class DockWindow : Window
         }
 
         _signature = signature;
+        _iconFit = FitScale(entries.Count, settings);
         _entries.Clear();
         _hwnds.Clear();
         _bins.Clear();
@@ -192,6 +195,20 @@ public partial class DockWindow : Window
         {
             Place();
         }
+    }
+
+    private double FitScale(int count, AppSettings settings)
+    {
+        if (count <= 0)
+        {
+            return 1;
+        }
+
+        var needed = DockGeometry.ReserveWidth(count, settings.DockIconSize, settings.DockSpacing, DockPadX, settings.DockMagnify ? settings.DockMagnifyScale : 1);
+        var area = MonitorLayout.WorkAreaFromCursor();
+        var dpi = VisualTreeHelper.GetDpi(this);
+        var available = Math.Max(240, area.Width / dpi.DpiScaleX - 48);
+        return needed <= available ? 1 : Math.Max(0.55, available / needed);
     }
 
     private readonly record struct DockItem(AppEntry App, long Handle, bool Bin);

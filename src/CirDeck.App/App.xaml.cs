@@ -134,7 +134,7 @@ public partial class App : Application
                 return;
             }
 
-            if (_session.Settings.PauseHotCornerWhenFullscreen && DesktopWindows.ForegroundIsFullscreen())
+            if ((_session.Settings.PauseHotCornerWhenFullscreen || _session.Settings.PauseHotCornerWhenGame) && DesktopWindows.ForegroundIsFullscreen())
             {
                 armed = true;
                 return;
