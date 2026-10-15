@@ -18,8 +18,8 @@ public partial class DockWindow : Window
     private readonly List<long> _hwnds = new();
     private readonly List<bool> _bins = new();
     private IReadOnlyList<DesktopWindow> _desktop = Array.Empty<DesktopWindow>();
-    private bool _collapseRunning;
     private bool _cornerReveal;
+    private TrayPanelWindow? _tray;
     private readonly System.Windows.Threading.DispatcherTimer _clock = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly List<ScaleTransform> _transforms = new();
     private readonly List<Ellipse> _dots = new();
@@ -130,7 +130,7 @@ public partial class DockWindow : Window
     {
         var settings = _session.Settings;
         var entries = Compose(settings);
-        var signature = string.Join("|", entries.Select(entry => entry.App.TargetPath + ":" + entry.Handle)) + ":" + settings.DockIconSize + ":" + settings.DockSpacing + ":" + settings.DockMagnifyScale + ":" + settings.DockMaterial + ":" + settings.ShowDockClock + ":" + _collapseRunning;
+        var signature = string.Join("|", entries.Select(entry => entry.App.TargetPath + ":" + entry.Handle)) + ":" + settings.DockIconSize + ":" + settings.DockSpacing + ":" + settings.DockMagnifyScale + ":" + settings.DockMaterial + ":" + settings.ShowDockClock;
         if (signature == _signature && IsVisible)
         {
             return;
@@ -196,7 +196,7 @@ public partial class DockWindow : Window
             list.Add(new DockItem(app, match.Path == null ? 0 : match.Handle, false));
         }
 
-        if (settings.ShowRunningApps && !_collapseRunning)
+        if (settings.ShowRunningApps)
         {
             foreach (var window in windows)
             {
@@ -224,13 +224,11 @@ public partial class DockWindow : Window
 
     private void LayoutTail(AppSettings settings, double plateHeight)
     {
-        var show = settings.ShowDockClock || settings.ShowRunningApps;
-        Tail.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        Tail.Visibility = Visibility.Visible;
         Tail.Height = plateHeight;
         TailLine.Height = Math.Max(16, IconSize * 0.45);
-        Chevron.Visibility = settings.ShowRunningApps ? Visibility.Visible : Visibility.Collapsed;
+        Chevron.Visibility = Visibility.Visible;
         ClockBlock.Visibility = settings.ShowDockClock ? Visibility.Visible : Visibility.Collapsed;
-        Chevron.Content = _collapseRunning ? "\uE70D" : "\uE70E";
         UpdateClock();
     }
 
@@ -260,10 +258,31 @@ public partial class DockWindow : Window
 
     private void OnChevron(object sender, RoutedEventArgs e)
     {
-        _collapseRunning = !_collapseRunning;
-        _signature = string.Empty;
-        Rebuild();
         e.Handled = true;
+        if (_tray != null)
+        {
+            _tray.Close();
+            _tray = null;
+            return;
+        }
+
+        var origin = Chevron.PointToScreen(new Point(Chevron.ActualWidth / 2, 0));
+        var dpi = VisualTreeHelper.GetDpi(this);
+        var x = origin.X / dpi.DpiScaleX;
+        var y = origin.Y / dpi.DpiScaleY;
+        _tray = new TrayPanelWindow(_session, _icons);
+        _tray.Closed += (_, _) => _tray = null;
+        _tray.Show();
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
+        {
+            if (_tray == null)
+            {
+                return;
+            }
+
+            _tray.Left = x - _tray.ActualWidth / 2;
+            _tray.Top = y - _tray.ActualHeight - 8;
+        }));
     }
 
     private void OnDragOver(object sender, DragEventArgs e)
@@ -416,6 +435,12 @@ public partial class DockWindow : Window
     {
         _hoverIndex = -1;
         HidePreview();
+        if (_tray != null)
+        {
+            EnsureTick();
+            return;
+        }
+
         if (_cornerReveal && !_session.Settings.KeepDockOnDesktop)
         {
             _cornerReveal = false;
