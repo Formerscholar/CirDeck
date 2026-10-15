@@ -381,8 +381,8 @@ public partial class LaunchpadWindow : Window
         if (pageChanged)
         {
             StopSlide();
-            _slide.X = delta > 0 ? 132 : -132;
             Refresh();
+            _slide.X = delta > 0 ? -PageSpan() : PageSpan();
             StartSlide(0, false, 0);
             return;
         }
@@ -403,9 +403,20 @@ public partial class LaunchpadWindow : Window
         var dir = page > _page ? 1 : -1;
         _page = page;
         _selected = -1;
-        _slide.X = dir * 136;
         Refresh();
+        _slide.X = dir * PageSpan();
         StartSlide(0, false, 0);
+    }
+
+    private double PageSpan()
+    {
+        var width = Tiles?.ActualWidth ?? 0;
+        if (width < 240)
+        {
+            width = ActualWidth > 240 ? ActualWidth * 0.9 : 960;
+        }
+
+        return width;
     }
 
     private void StartSlide(double target, bool exit, int direction)
@@ -438,29 +449,33 @@ public partial class LaunchpadWindow : Window
     private void OnSlide(object? sender, EventArgs e)
     {
         var now = e is RenderingEventArgs args ? args.RenderingTime : TimeSpan.Zero;
-        var dt = _slideClock == TimeSpan.Zero ? 1d / 60 : (now - _slideClock).TotalSeconds;
+        var dt = _slideClock == TimeSpan.Zero ? 1d / 120 : (now - _slideClock).TotalSeconds;
         _slideClock = now;
-        if (dt <= 0 || dt > 0.05)
+        if (dt <= 0)
         {
-            dt = 1d / 60;
+            dt = 1d / 120;
+        }
+        else if (dt > 1d / 30)
+        {
+            dt = 1d / 30;
         }
 
         var pace = _session.Settings.PageSpeed switch
         {
-            "Slow" => 0.65,
-            "Normal" => 0.85,
-            _ => 1d
+            "Slow" => 0.72,
+            "Normal" => 1d,
+            _ => 1.15
         };
-        var omega = (_slideExit ? 26d : 18d) * pace;
+        var omega = 12d * pace;
         _slide.X += (_slideTarget - _slide.X) * (1 - Math.Exp(-omega * dt));
-        if (Math.Abs(_slideTarget - _slide.X) > 0.8)
+        if (Math.Abs(_slideTarget - _slide.X) > 0.4)
         {
             return;
         }
 
-        _slide.X = _slideTarget;
         if (!_slideExit)
         {
+            _slide.X = _slideTarget;
             StopSlide();
             return;
         }
@@ -477,8 +492,8 @@ public partial class LaunchpadWindow : Window
         _page = next;
         _selected = -1;
         _pressed = null;
-        _slide.X = _slideDir > 0 ? 148 : -148;
         _slideTarget = 0;
+        _slide.X = _slideDir > 0 ? PageSpan() : -PageSpan();
         Refresh();
     }
 
@@ -550,7 +565,13 @@ public partial class LaunchpadWindow : Window
 
     private void OnTileEnter(object sender, MouseEventArgs e)
     {
-        if (!_session.Settings.HoverTilt || sender is not Button button)
+        if (sender is not Button button)
+        {
+            return;
+        }
+
+        PaintWell(button, true);
+        if (!_session.Settings.HoverTilt)
         {
             return;
         }
@@ -561,10 +582,26 @@ public partial class LaunchpadWindow : Window
 
     private void OnTileLeave(object sender, MouseEventArgs e)
     {
-        if (sender is Button button)
+        if (sender is not Button button)
         {
-            button.RenderTransform = Transform.Identity;
+            return;
         }
+
+        button.RenderTransform = Transform.Identity;
+        PaintWell(button, false);
+    }
+
+    private void PaintWell(Button button, bool hot)
+    {
+        var well = FindVisuals<Border>(button).FirstOrDefault(border => border.Child is Image);
+        if (well == null)
+        {
+            return;
+        }
+
+        var selected = button.DataContext is TileModel tile && tile.Selected;
+        var alpha = (byte)(hot || selected ? 0x46 : 0x2A);
+        well.Background = new SolidColorBrush(Color.FromArgb(alpha, 255, 255, 255));
     }
 
     private void ApplyLook()
@@ -616,6 +653,7 @@ public partial class LaunchpadWindow : Window
                 "Square" => new CornerRadius(6),
                 _ => new CornerRadius(18 * settings.IconScale)
             };
+            PaintWell(button, button.IsMouseOver);
         }
 
         if (image != null)
@@ -1006,7 +1044,7 @@ public partial class LaunchpadWindow : Window
             }
             else
             {
-                StartSlide(dir > 0 ? -340 : 340, true, dir);
+                StartSlide(dir > 0 ? -PageSpan() : PageSpan(), true, dir);
             }
 
             return;
