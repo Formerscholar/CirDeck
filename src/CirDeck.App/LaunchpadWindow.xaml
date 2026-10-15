@@ -79,7 +79,7 @@
                 <ItemsControl x:Name="Tiles" HorizontalAlignment="Center" VerticalAlignment="Top" BorderThickness="0" Background="Transparent">
                     <ItemsControl.Template>
                         <ControlTemplate TargetType="ItemsControl">
-                            <ItemsPresenter VerticalAlignment="Top" HorizontalAlignment="Stretch"/>
+                            <ItemsPresenter VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
                         </ControlTemplate>
                     </ItemsControl.Template>
                     <ItemsControl.ItemTemplate>

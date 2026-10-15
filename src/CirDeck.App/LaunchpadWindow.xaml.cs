@@ -35,6 +35,7 @@ public partial class LaunchpadWindow : Window
     private bool _pinDrag;
     private int _visible;
     private int _laidColumns = -1;
+    private int _laidRows = -1;
     private bool _slideExit;
     private int _slideDir;
     private TimeSpan _slideClock;
@@ -144,12 +145,15 @@ public partial class LaunchpadWindow : Window
         var width = ActualWidth > 240 ? ActualWidth : 1600;
         var height = ActualHeight > 240 ? ActualHeight : 1000;
         var settings = _session.Settings;
-        var gap = settings.DockSpacing;
-        _cellW = Math.Min(220, Math.Max(108, (width - settings.ContentPadX) / columns)) + gap * 0.35;
-        var block = 68 * settings.IconScale + (settings.ShowAppNames ? settings.NameFontSize + 14 : 6);
-        var minCell = block + 48;
-        var room = (height - 400 - settings.ContentPadTop) / rows;
-        _cellH = Math.Max(minCell, Math.Min(room, block + 84));
+        var well = 68 * settings.IconScale;
+        var nameLine = settings.ShowAppNames ? settings.NameFontSize + 14 : 0;
+        var block = well + nameLine + 16;
+        var inner = Math.Max(columns * (well + 72), width - settings.PagePadX * 2);
+        inner = Math.Min(inner, Math.Max(480, width - 48));
+        _cellW = inner / columns;
+        var available = height - (230 + settings.ContentPadTop) - (140 + settings.PagePadY);
+        var room = available / rows;
+        _cellH = Math.Clamp(room, block + 52, block + 96);
         FitTiles();
     }
 
@@ -157,14 +161,20 @@ public partial class LaunchpadWindow : Window
     {
         var columns = Math.Max(1, _session.Settings.Columns);
         var rows = Math.Max(1, _session.Settings.Rows);
-        if (_laidColumns != columns)
+        if (_laidColumns != columns || _laidRows != rows)
         {
             var factory = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.Primitives.UniformGrid));
             factory.SetValue(System.Windows.Controls.Primitives.UniformGrid.ColumnsProperty, columns);
+            factory.SetValue(System.Windows.Controls.Primitives.UniformGrid.RowsProperty, rows);
             Tiles.ItemsPanel = new ItemsPanelTemplate(factory);
             _laidColumns = columns;
+            _laidRows = rows;
         }
 
+        var slot = new Style(typeof(ContentPresenter));
+        slot.Setters.Add(new Setter(WidthProperty, _cellW));
+        slot.Setters.Add(new Setter(HeightProperty, _cellH));
+        Tiles.ItemContainerStyle = slot;
         Tiles.Width = columns * _cellW;
         Tiles.Height = rows * _cellH;
         Tiles.HorizontalAlignment = HorizontalAlignment.Center;
@@ -593,7 +603,7 @@ public partial class LaunchpadWindow : Window
     {
         var settings = _session.Settings;
         nameBrush ??= settings.NameColor == "Black" ? Brushes.Black : Brushes.White;
-        var well = FindVisuals<Border>(button).FirstOrDefault();
+        var well = FindVisuals<Border>(button).FirstOrDefault(border => border.Child is Image);
         var image = FindVisuals<Image>(button).FirstOrDefault();
         if (well != null)
         {
@@ -616,18 +626,30 @@ public partial class LaunchpadWindow : Window
             image.Clip = null;
         }
 
-        var label = FindVisuals<TextBlock>(button).FirstOrDefault(item => item.Text != null && item.FontFamily.Source != "Segoe MDL2 Assets");
+        var label = FindVisuals<TextBlock>(button).FirstOrDefault(item => item.FontFamily?.Source != "Segoe MDL2 Assets");
         if (label == null)
         {
             return;
         }
 
+        if (button.DataContext is TileModel model && !string.IsNullOrWhiteSpace(model.Name))
+        {
+            label.Text = model.Name;
+        }
+
         label.Visibility = settings.ShowAppNames ? Visibility.Visible : Visibility.Collapsed;
+        label.FontFamily = new FontFamily("Microsoft YaHei UI");
         label.FontSize = settings.NameFontSize;
         label.Foreground = nameBrush;
-        label.Effect = settings.NameShadow
-            ? new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 4, ShadowDepth = 0, Opacity = 0.8, Color = Colors.Black }
-            : null;
+        label.Background = Brushes.Transparent;
+        label.Padding = new Thickness(0);
+        label.Effect = new System.Windows.Media.Effects.DropShadowEffect
+        {
+            BlurRadius = settings.NameShadow ? 4 : 2,
+            ShadowDepth = 0,
+            Opacity = settings.NameColor == "Black" ? 0 : settings.NameShadow ? 0.85 : 0.7,
+            Color = Colors.Black
+        };
     }
 
     private static IEnumerable<T> FindVisuals<T>(DependencyObject root) where T : DependencyObject
