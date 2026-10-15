@@ -41,7 +41,7 @@
                                 </ControlTemplate>
                             </Button.Template>
                         </Button>
-                        <TextBlock DockPanel.Dock="Right" Text="Alt + Space" Foreground="#99F5F5F7" FontSize="11" VerticalAlignment="Center" Margin="8,0,6,0"/>
+                        <TextBlock DockPanel.Dock="Right" Text="Ctrl + Alt + Space" Foreground="#99F5F5F7" FontSize="11" VerticalAlignment="Center" Margin="8,0,6,0"/>
                         <Grid Width="250">
                             <TextBox x:Name="SearchBox" Style="{StaticResource SearchBox}" TextChanged="OnSearchChanged"/>
                             <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#E6FFFFFF" VerticalAlignment="Center" Margin="4,0,0,0" IsHitTestVisible="False"/>

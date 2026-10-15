@@ -258,7 +258,7 @@
                                             <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#8E8E93" Margin="6,0,0,0" VerticalAlignment="Center" ToolTip="用来打开或收起启动台"/>
                                         </StackPanel>
                                         <Border HorizontalAlignment="Right" Background="#3A3A3C" CornerRadius="8" Padding="12,6" Margin="0,0,16,0">
-                                            <TextBlock Text="Alt + Space" Foreground="#F5F5F7" FontSize="13"/>
+                                            <TextBlock Text="Ctrl + Alt + Space" Foreground="#F5F5F7" FontSize="13"/>
                                         </Border>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>

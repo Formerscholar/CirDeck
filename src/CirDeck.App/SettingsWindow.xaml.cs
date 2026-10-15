@@ -160,13 +160,18 @@ public partial class SettingsWindow : Window
 
     private void OnDockMetric(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (!_ready)
+        {
+            return;
+        }
+
         WriteDockLabels();
         SaveFlags();
     }
 
     private void WriteDockLabels()
     {
-        if (IconSizeText == null)
+        if (IconSizeText == null || GapText == null || GrowText == null || BottomText == null)
         {
             return;
         }
