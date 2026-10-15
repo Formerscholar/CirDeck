@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>CirDeck.Core</RootNamespace>
     <Description>Launchpad search, dock geometry, and local settings. No UI and no license checks.</Description>
   </PropertyGroup>

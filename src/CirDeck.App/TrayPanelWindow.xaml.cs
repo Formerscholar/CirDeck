@@ -37,7 +37,7 @@ public partial class TrayPanelWindow : Window
         {
             icons = TrayIcons.List();
         }
-        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        catch (Exception)
         {
             icons = Array.Empty<TrayIcon>();
         }

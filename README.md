@@ -16,9 +16,9 @@
 ## 环境
 
 - Windows 10 或 Windows 11
-- [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0)，需要包含 Windows 桌面工作负载
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)，需要包含 Windows 桌面工作负载
 
-工程目标框架是 `net6.0-windows`。界面使用 WPF，Dock 放大只更新渲染缩放，不在每一帧重新测量布局。
+工程目标框架是 `net10.0-windows`。界面使用 WPF，Dock 放大只更新渲染缩放，不在每一帧重新测量布局。
 
 ## 构建和运行
 
