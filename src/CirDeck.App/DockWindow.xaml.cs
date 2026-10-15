@@ -20,6 +20,9 @@ public partial class DockWindow : Window
     private IReadOnlyList<DesktopWindow> _desktop = Array.Empty<DesktopWindow>();
     private bool _cornerReveal;
     private bool _withLaunchpad;
+    private Point _pressPoint;
+    private int _pressIndex = -1;
+    private bool _suppressClick;
     private TrayPanelWindow? _tray;
     private readonly System.Windows.Threading.DispatcherTimer _clock = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly List<ScaleTransform> _transforms = new();
@@ -296,12 +299,34 @@ public partial class DockWindow : Window
 
     private void OnDragOver(object sender, DragEventArgs e)
     {
-        e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Move : DragDropEffects.None;
+        if (e.Data.GetDataPresent(LibrarySession.PinDragFormat))
+        {
+            e.Effects = DragDropEffects.Move;
+        }
+        else
+        {
+            e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Move : DragDropEffects.None;
+        }
+
         e.Handled = true;
     }
 
     private void OnDropFiles(object sender, DragEventArgs e)
     {
+        if (e.Data.GetData(LibrarySession.PinDragFormat) is string path)
+        {
+            var app = _session.Apps.FirstOrDefault(item => string.Equals(item.TargetPath, path, StringComparison.OrdinalIgnoreCase))
+                ?? _entries.FirstOrDefault(item => string.Equals(item.TargetPath, path, StringComparison.OrdinalIgnoreCase));
+            if (app != null)
+            {
+                _session.Pin(app);
+            }
+
+            e.Effects = DragDropEffects.Move;
+            e.Handled = true;
+            return;
+        }
+
         if (!_session.Settings.ShowRecycleBin || e.Data.GetData(DataFormats.FileDrop) is not string[] files)
         {
             return;
@@ -415,8 +440,34 @@ public partial class DockWindow : Window
             _session.Settings.DockMagnify);
     }
 
+    private void OnMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        _pressPoint = e.GetPosition(this);
+        _pressIndex = Hit(e.GetPosition(Surface));
+        _suppressClick = false;
+    }
+
     private void OnMouseMove(object sender, MouseEventArgs e)
     {
+        if (e.LeftButton == MouseButtonState.Pressed && _pressIndex >= 0 && !_suppressClick)
+        {
+            var moved = e.GetPosition(this) - _pressPoint;
+            if (Math.Abs(moved.X) + Math.Abs(moved.Y) > 14 && _pressIndex < _bins.Count && !_bins[_pressIndex])
+            {
+                var entry = _entries[_pressIndex];
+                _pressIndex = -1;
+                _suppressClick = true;
+                HidePreview();
+                var effect = DragDrop.DoDragDrop(this, new DataObject(LibrarySession.PinDragFormat, entry.TargetPath), DragDropEffects.Move);
+                if (effect == DragDropEffects.None)
+                {
+                    _session.Unpin(entry);
+                }
+
+                return;
+            }
+        }
+
         var index = Hit(e.GetPosition(Surface));
         if (index >= 0)
         {
@@ -591,6 +642,13 @@ public partial class DockWindow : Window
 
     private void OnMouseUp(object sender, MouseButtonEventArgs e)
     {
+        if (_suppressClick)
+        {
+            _suppressClick = false;
+            _pressIndex = -1;
+            return;
+        }
+
         var index = Hit(e.GetPosition(Surface));
         if (index < 0)
         {

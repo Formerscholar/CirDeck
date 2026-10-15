@@ -13,6 +13,7 @@
         AllowDrop="True"
         Drop="OnDropFiles"
         DragOver="OnDragOver"
+        PreviewMouseLeftButtonDown="OnMouseDown"
         MouseMove="OnMouseMove"
         MouseLeave="OnMouseLeave"
         MouseLeftButtonUp="OnMouseUp"

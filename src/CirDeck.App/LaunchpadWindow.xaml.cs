@@ -32,6 +32,7 @@ public partial class LaunchpadWindow : Window
     private bool _sliding;
     private bool _ignoreGesture;
     private bool _settingsOpen;
+    private bool _pinDrag;
     private int _visible;
     private int _laidColumns = -1;
     private bool _slideExit;
@@ -535,6 +536,16 @@ public partial class LaunchpadWindow : Window
         }
 
         _dragged = true;
+        if (_pressed?.Entry != null && dy > 48 && dy > Math.Abs(dx))
+        {
+            var path = _pressed.Entry.TargetPath;
+            _pressed = null;
+            _pinDrag = true;
+            Mouse.Capture(null);
+            DragDrop.DoDragDrop(this, new DataObject(LibrarySession.PinDragFormat, path), DragDropEffects.Move);
+            return;
+        }
+
         if (Math.Abs(dx) > Math.Abs(dy) && string.IsNullOrWhiteSpace(SearchBox.Text))
         {
             _slide.X = LimitEdge(Rubber(_slideAtPress + dx));
@@ -783,9 +794,10 @@ public partial class LaunchpadWindow : Window
 
     private void OnTileUp(object sender, MouseButtonEventArgs e)
     {
-        if (_ignoreGesture)
+        if (_ignoreGesture || _pinDrag)
         {
             _ignoreGesture = false;
+            _pinDrag = false;
             Mouse.Capture(null);
             return;
         }

@@ -255,6 +255,28 @@ public sealed class LibrarySession
         return DockPins.Any(pin => string.Equals(pin, app.TargetPath, StringComparison.OrdinalIgnoreCase));
     }
 
+    public const string PinDragFormat = "CirDeck.Pin";
+
+    public void Pin(AppEntry app)
+    {
+        if (IsPinned(app))
+        {
+            return;
+        }
+
+        TogglePin(app);
+    }
+
+    public void Unpin(AppEntry app)
+    {
+        if (!IsPinned(app))
+        {
+            return;
+        }
+
+        TogglePin(app);
+    }
+
     public void TogglePin(AppEntry app)
     {
         var pins = DockPins.ToList();
