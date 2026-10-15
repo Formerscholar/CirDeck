@@ -76,6 +76,7 @@ public partial class LaunchpadWindow : Window
     public void Present()
     {
         Show();
+        WindowChrome.HideFromSwitcher(new WindowInteropHelper(this).Handle);
         PlaceOnCursorMonitor();
         Activate();
         SearchBox.Focus();

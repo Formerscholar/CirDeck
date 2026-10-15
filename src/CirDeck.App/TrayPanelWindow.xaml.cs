@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -22,6 +23,7 @@ public partial class TrayPanelWindow : Window
         _session = session;
         _icons = icons;
         InitializeComponent();
+        SourceInitialized += (_, _) => WindowChrome.HideFromSwitcher(new WindowInteropHelper(this).Handle);
         _icons.Ready += OnIconReady;
         TaskbarBox.IsChecked = session.Settings.HideTaskbar;
         RefreshIcons();

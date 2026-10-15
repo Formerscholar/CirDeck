@@ -91,6 +91,12 @@ internal static class NativeMethods
     [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
     public static extern IntPtr GetWindowLongPtr64(IntPtr hwnd, int index);
 
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongW")]
+    public static extern int SetWindowLong32(IntPtr hwnd, int index, int value);
+
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW")]
+    public static extern IntPtr SetWindowLongPtr64(IntPtr hwnd, int index, IntPtr value);
+
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     public static extern int GetWindowText(IntPtr hwnd, StringBuilder text, int length);
 
@@ -260,13 +266,42 @@ public static class MonitorLayout
 
 public static class WindowChrome
 {
+    public static void HideFromSwitcher(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero)
+        {
+            return;
+        }
+
+        const int extendedStyle = -20;
+        const long toolWindow = 0x80;
+        const long appWindow = 0x40000;
+        var style = IntPtr.Size == 8
+            ? NativeMethods.GetWindowLongPtr64(hwnd, extendedStyle).ToInt64()
+            : NativeMethods.GetWindowLong32(hwnd, extendedStyle);
+        style |= toolWindow;
+        style &= ~appWindow;
+        if (IntPtr.Size == 8)
+        {
+            NativeMethods.SetWindowLongPtr64(hwnd, extendedStyle, new IntPtr(style));
+        }
+        else
+        {
+            NativeMethods.SetWindowLong32(hwnd, extendedStyle, (int)style);
+        }
+
+        NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0004 | 0x0010 | 0x0020);
+    }
+
     public static void ApplyLaunchpad(IntPtr hwnd)
     {
+        HideFromSwitcher(hwnd);
         UseDarkBackdrop(hwnd, 3);
     }
 
     public static void ApplyDock(IntPtr hwnd)
     {
+        HideFromSwitcher(hwnd);
         UseDarkBackdrop(hwnd, 3);
         if (hwnd == IntPtr.Zero)
         {

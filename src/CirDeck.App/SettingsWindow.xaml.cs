@@ -2,8 +2,10 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 using System.Windows.Media;
 using CirDeck.Core;
+using CirDeck.Interop;
 using Microsoft.Win32;
 
 namespace CirDeck.App;
@@ -46,6 +48,7 @@ public partial class SettingsWindow : Window
     {
         _session = session;
         InitializeComponent();
+        SourceInitialized += (_, _) => WindowChrome.HideFromSwitcher(new WindowInteropHelper(this).Handle);
         var settings = session.Settings;
         StartupBox.IsChecked = settings.LaunchAtStartup;
         OpenAtStartupBox.IsChecked = settings.OpenLaunchpadAtStartup;

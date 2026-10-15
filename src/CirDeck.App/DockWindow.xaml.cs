@@ -54,6 +54,8 @@ public partial class DockWindow : Window
         SizeChanged += (_, _) => { };
         _session.Changed += Rebuild;
         _icons.Ready += OnIconReady;
+        SourceInitialized += (_, _) => WindowChrome.HideFromSwitcher(new WindowInteropHelper(this).Handle);
+        _preview.SourceInitialized += (_, _) => WindowChrome.HideFromSwitcher(new WindowInteropHelper(_preview).Handle);
         _clock.Tick += (_, _) => UpdateClock();
         _clock.Start();
         UpdateClock();
@@ -80,6 +82,7 @@ public partial class DockWindow : Window
         }
 
         Show();
+        WindowChrome.HideFromSwitcher(new WindowInteropHelper(this).Handle);
         Place();
         ApplyZOrder();
     }
