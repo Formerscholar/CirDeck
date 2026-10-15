@@ -11,4 +11,7 @@
     <ProjectReference Include="..\CirDeck.Core\CirDeck.Core.csproj" />
     <ProjectReference Include="..\CirDeck.Interop\CirDeck.Interop.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="HandyControl" Version="3.5.1" />
+  </ItemGroup>
 </Project>

@@ -143,9 +143,13 @@ public partial class LaunchpadWindow : Window
         var rows = Math.Max(1, _session.Settings.Rows);
         var width = ActualWidth > 240 ? ActualWidth : 1600;
         var height = ActualHeight > 240 ? ActualHeight : 1000;
-        var gap = _session.Settings.DockSpacing;
-        _cellW = Math.Min(220, Math.Max(108, (width - _session.Settings.ContentPadX) / columns)) + gap * 0.35;
-        _cellH = Math.Min(200, Math.Max(96, (height - 360 - _session.Settings.ContentPadTop) / rows));
+        var settings = _session.Settings;
+        var gap = settings.DockSpacing;
+        _cellW = Math.Min(220, Math.Max(108, (width - settings.ContentPadX) / columns)) + gap * 0.35;
+        var block = 68 * settings.IconScale + (settings.ShowAppNames ? settings.NameFontSize + 14 : 6);
+        var minCell = block + 48;
+        var room = (height - 400 - settings.ContentPadTop) / rows;
+        _cellH = Math.Max(minCell, Math.Min(room, block + 84));
         FitTiles();
     }
 
@@ -562,8 +566,9 @@ public partial class LaunchpadWindow : Window
 
         var settings = _session.Settings;
         Stage.Margin = new Thickness(settings.PagePadX, 52 + settings.ContentPadTop, settings.PagePadX, 100 + settings.PagePadY);
-        Veil.Opacity = settings.VeilOpacity;
-        Backdrop.Source = DesktopBackdrop.Load(settings.BlurRadius);
+        Veil.Opacity = Math.Clamp(0.16 + settings.VeilOpacity * 0.35, 0, 0.55);
+        var blur = settings.BlurRadius <= 1 ? 0 : Math.Max(settings.BlurRadius, 72);
+        Backdrop.Source = DesktopBackdrop.Load(blur);
         SettingsButton.Visibility = settings.HideSettingsButton ? Visibility.Collapsed : Visibility.Visible;
         SearchChrome.Visibility = settings.SearchMode == "TopHover" && Mouse.GetPosition(this).Y > 72
             ? Visibility.Collapsed
@@ -588,18 +593,27 @@ public partial class LaunchpadWindow : Window
     {
         var settings = _session.Settings;
         nameBrush ??= settings.NameColor == "Black" ? Brushes.Black : Brushes.White;
+        var well = FindVisuals<Border>(button).FirstOrDefault();
         var image = FindVisuals<Image>(button).FirstOrDefault();
+        if (well != null)
+        {
+            var wellSize = 68 * settings.IconScale;
+            well.Width = wellSize;
+            well.Height = wellSize;
+            well.CornerRadius = settings.IconShape switch
+            {
+                "Circle" => new CornerRadius(wellSize / 2),
+                "Square" => new CornerRadius(6),
+                _ => new CornerRadius(18 * settings.IconScale)
+            };
+        }
+
         if (image != null)
         {
-            var size = 58 * settings.IconScale;
-            image.Width = size;
-            image.Height = size;
-            image.Clip = settings.IconShape switch
-            {
-                "Circle" => new EllipseGeometry(new Point(size / 2, size / 2), size / 2, size / 2),
-                "Square" => new RectangleGeometry(new Rect(0, 0, size, size)),
-                _ => new RectangleGeometry(new Rect(0, 0, size, size), 14, 14)
-            };
+            var glyph = 42 * settings.IconScale;
+            image.Width = glyph;
+            image.Height = glyph;
+            image.Clip = null;
         }
 
         var label = FindVisuals<TextBlock>(button).FirstOrDefault(item => item.Text != null && item.FontFamily.Source != "Segoe MDL2 Assets");

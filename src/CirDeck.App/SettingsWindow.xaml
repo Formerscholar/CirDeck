@@ -1,9 +1,10 @@
 <Window x:Class="CirDeck.App.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
         Title="设置"
         Width="1040"
-        Height="760"
+        Height="820"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -15,6 +16,11 @@
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display">
     <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/SkinDark.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/Theme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
         <Style x:Key="Switch" TargetType="CheckBox">
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Width" Value="50"/>
@@ -83,6 +89,8 @@
             <Setter Property="Background" Value="#3A3A3C"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="14,7"/>
+            <Setter Property="MinHeight" Value="32"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Template">
@@ -119,29 +127,30 @@
         </Style>
         <Style x:Key="DarkCombo" TargetType="ComboBox">
             <Setter Property="Foreground" Value="#F5F5F7"/>
-            <Setter Property="Background" Value="#3A3A3C"/>
+            <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Height" Value="34"/>
+            <Setter Property="MinHeight" Value="34"/>
+            <Setter Property="MaxHeight" Value="34"/>
+            <Setter Property="Padding" Value="0"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="ItemContainerStyle" Value="{StaticResource DarkComboItem}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
-                        <Grid>
-                            <ToggleButton Focusable="False" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" ClickMode="Press">
+                        <Grid Height="34">
+                            <ToggleButton Style="{x:Null}" Height="34" Focusable="False" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" ClickMode="Press">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
-                                        <Border Background="#3A3A3C" CornerRadius="8" Padding="12,0,10,0">
-                                            <DockPanel>
-                                                <TextBlock DockPanel.Dock="Right" Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="#C7C7CC" VerticalAlignment="Center" Margin="8,0,0,0"/>
-                                                <ContentPresenter Content="{Binding SelectionBoxItem, RelativeSource={RelativeSource AncestorType=ComboBox}}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                                            </DockPanel>
-                                        </Border>
+                                        <Border Background="#3A3A3C" CornerRadius="8"/>
                                     </ControlTemplate>
                                 </ToggleButton.Template>
                             </ToggleButton>
+                            <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="#C7C7CC" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" IsHitTestVisible="False"/>
+                            <ContentPresenter x:Name="ContentSite" Margin="12,0,28,0" VerticalAlignment="Center" HorizontalAlignment="Left" IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"/>
                             <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade">
                                 <Border Background="#2C2C30" BorderBrush="#33FFFFFF" BorderThickness="1" CornerRadius="10" Padding="4" Margin="0,6,0,0" MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
                                     <ScrollViewer MaxHeight="240">
@@ -154,6 +163,48 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <Style TargetType="Slider">
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="MinHeight" Value="22"/>
+            <Setter Property="MaxHeight" Value="22"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Track x:Name="PART_Track" VerticalAlignment="Center">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Style="{x:Null}" Command="Slider.DecreaseLarge" Focusable="False">
+                                    <RepeatButton.Template>
+                                        <ControlTemplate TargetType="RepeatButton">
+                                            <Border Height="4" Background="#0A84FF" CornerRadius="2" VerticalAlignment="Center"/>
+                                        </ControlTemplate>
+                                    </RepeatButton.Template>
+                                </RepeatButton>
+                            </Track.DecreaseRepeatButton>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Style="{x:Null}" Command="Slider.IncreaseLarge" Focusable="False">
+                                    <RepeatButton.Template>
+                                        <ControlTemplate TargetType="RepeatButton">
+                                            <Border Height="4" Background="#3A3A3C" CornerRadius="2" VerticalAlignment="Center"/>
+                                        </ControlTemplate>
+                                    </RepeatButton.Template>
+                                </RepeatButton>
+                            </Track.IncreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb Style="{x:Null}" Focusable="False">
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Border Width="16" Height="16" Background="White" CornerRadius="8" BorderBrush="#14000000" BorderThickness="1"/>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                        </Track>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        </ResourceDictionary>
     </Window.Resources>
     <Border Margin="18" Background="#1C1C1E" CornerRadius="18" BorderBrush="#22FFFFFF" BorderThickness="1">
         <Border.Effect>
@@ -222,26 +273,34 @@
                     </StackPanel>
                 </DockPanel>
             </Border>
-            <Grid Grid.Column="1" Margin="28,16,22,20">
-                <Button HorizontalAlignment="Right" VerticalAlignment="Top" Width="32" Height="32" Cursor="Hand" Click="OnClose" Foreground="#A1A1A6" FontFamily="Segoe MDL2 Assets" Content="&#xE8BB;" FontSize="12">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border Background="Transparent">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
-                <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled" Margin="0,8,0,0" Padding="0,0,8,0">
+            <Grid Grid.Column="1" Margin="28,20,16,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0" MinHeight="72" Margin="0,0,0,12">
+                    <StackPanel Margin="36,4,36,0" VerticalAlignment="Center">
+                        <TextBlock x:Name="PageTitle" Text="通用" FontSize="22" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" TextAlignment="Center"/>
+                        <TextBlock x:Name="PageSubtitle" Text="开机自启、全局快捷键、多显示器行为与检查更新" FontSize="13" Foreground="#8E8E93" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                    </StackPanel>
+                    <Button HorizontalAlignment="Right" VerticalAlignment="Top" Width="32" Height="32" Cursor="Hand" Click="OnClose" Foreground="#A1A1A6" FontFamily="Segoe MDL2 Assets" Content="&#xE8BB;" FontSize="12">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="Transparent">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,8">
                     <StackPanel>
-                        <TextBlock x:Name="PageTitle" Text="通用" FontSize="22" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center"/>
-                        <TextBlock x:Name="PageSubtitle" Text="开机自启、全局快捷键、多显示器行为与检查更新" FontSize="13" Foreground="#8E8E93" HorizontalAlignment="Center" Margin="0,6,0,22"/>
                         <StackPanel x:Name="PageGeneral">
                             <Border Style="{StaticResource Card}">
                                 <StackPanel>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="开机自启动" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="StartupBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="StartupBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="68">
@@ -249,7 +308,7 @@
                                             <TextBlock Text="自启动后打开启动台" Style="{StaticResource RowTitle}"/>
                                             <TextBlock Text="关闭时仅在后台运行" Style="{StaticResource RowNote}"/>
                                         </StackPanel>
-                                        <CheckBox x:Name="OpenAtStartupBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="OpenAtStartupBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
@@ -264,15 +323,19 @@
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="打开应用后自动收起" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="CloseAfterBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="CloseAfterBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0,12,0">
                                             <TextBlock Text="启动台显示屏幕" Style="{StaticResource RowTitle}"/>
                                             <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#8E8E93" Margin="6,0,0,0" VerticalAlignment="Center" ToolTip="启动台出现在哪一块屏幕上"/>
                                         </StackPanel>
-                                        <ComboBox x:Name="ScreenCombo" Style="{StaticResource DarkCombo}" Width="196" Margin="0,0,16,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
+                                        <ComboBox Grid.Column="1" Style="{StaticResource DarkCombo}" x:Name="ScreenCombo" Width="196" Margin="0,0,16,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
@@ -283,7 +346,7 @@
                                         <TextBlock Text="在桌面常驻启动台" Style="{StaticResource RowTitle}"/>
                                         <TextBlock Text="显示在桌面上、应用窗口后面；启动应用后不收起。关闭可恢复原有行为。" Style="{StaticResource RowNote}"/>
                                     </StackPanel>
-                                    <CheckBox x:Name="DesktopBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    <ToggleButton x:Name="DesktopBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                 </Grid>
                             </Border>
                             <Border Style="{StaticResource Card}">
@@ -298,15 +361,19 @@
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="自动检查更新" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="AutoUpdateBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="AutoUpdateBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0,12,0">
                                             <TextBlock Text="恢复默认设置" Style="{StaticResource RowTitle}"/>
                                             <TextBlock Text="&#xE897;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#8E8E93" Margin="6,0,0,0" VerticalAlignment="Center" ToolTip="只恢复开关和屏幕选项，不删除图标和布局"/>
                                         </StackPanel>
-                                        <Button Content="恢复默认" Style="{StaticResource DangerButton}" HorizontalAlignment="Right" Margin="0,0,16,0" Click="OnReset"/>
+                                        <Button Grid.Column="1" Content="恢复默认" Style="{StaticResource DangerButton}" Margin="0,0,16,0" Click="OnReset"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
@@ -320,7 +387,7 @@
                                         <StackPanel VerticalAlignment="Center" Margin="18,8,70,8">
                                             <TextBlock Text="显示程序坞" Style="{StaticResource RowTitle}"/>
                                         </StackPanel>
-                                        <CheckBox x:Name="ShowDockBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="ShowDockBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="68">
@@ -328,7 +395,7 @@
                                             <TextBlock Text="在桌面常驻 Dock" Style="{StaticResource RowTitle}"/>
                                             <TextBlock Text="快速启动固定应用，打开其他窗口时可以被盖住" Style="{StaticResource RowNote}"/>
                                         </StackPanel>
-                                        <CheckBox x:Name="ResidentBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="ResidentBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="68">
@@ -336,7 +403,7 @@
                                             <TextBlock Text="Dock 右侧显示打开的应用" Style="{StaticResource RowTitle}"/>
                                             <TextBlock Text="包括最小化窗口。同一应用只显示一个，点击恢复，悬停预览，关闭后移除" Style="{StaticResource RowNote}"/>
                                         </StackPanel>
-                                        <CheckBox x:Name="RunningAppsBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="RunningAppsBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="68">
@@ -344,7 +411,7 @@
                                             <TextBlock Text="合并固定图标与运行中的应用" Style="{StaticResource RowTitle}"/>
                                             <TextBlock Text="已固定的应用不在右侧再出现一次，点固定图标即可恢复窗口" Style="{StaticResource RowNote}"/>
                                         </StackPanel>
-                                        <CheckBox x:Name="MergeBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="MergeBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="64">
@@ -352,7 +419,7 @@
                                             <TextBlock Text="Dock 时间与日期" Style="{StaticResource RowTitle}"/>
                                             <TextBlock Text="显示在最右侧，使用系统本地时间" Style="{StaticResource RowNote}"/>
                                         </StackPanel>
-                                        <CheckBox x:Name="DockClockBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="DockClockBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="64">
@@ -360,12 +427,12 @@
                                             <TextBlock Text="显示回收站" Style="{StaticResource RowTitle}"/>
                                             <TextBlock Text="点击打开，拖入文件回收，右键清空" Style="{StaticResource RowNote}"/>
                                         </StackPanel>
-                                        <CheckBox x:Name="RecycleBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="RecycleBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="Dock 背景" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <ComboBox x:Name="MaterialCombo" Style="{StaticResource DarkCombo}" Width="140" Margin="0,0,16,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
+                                        <ComboBox Style="{StaticResource DarkCombo}" x:Name="MaterialCombo" Width="140" Margin="0,0,16,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="72">
@@ -383,7 +450,7 @@
                                             <TextBlock Text="隐藏系统任务栏" Style="{StaticResource RowTitle}"/>
                                             <TextBlock Text="关闭开关或退出 CirDeck 后会恢复系统任务栏" Style="{StaticResource RowNote}"/>
                                         </StackPanel>
-                                        <CheckBox x:Name="HideTaskbarBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="HideTaskbarBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
@@ -393,16 +460,16 @@
                                     <Grid MinHeight="58">
                                         <TextBlock Text="打开启动台" Style="{StaticResource RowTitle}" Margin="18,0"/>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,16,0">
-                                            <ComboBox x:Name="LaunchCornerCombo" Style="{StaticResource DarkCombo}" Width="110" Margin="0,0,12,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
-                                            <CheckBox x:Name="LaunchCornerBox" Style="{StaticResource Switch}"/>
+                                            <ComboBox Style="{StaticResource DarkCombo}" x:Name="LaunchCornerCombo" Width="110" Margin="0,0,12,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
+                                            <ToggleButton x:Name="LaunchCornerBox" Style="{StaticResource ToggleButtonSwitch}"/>
                                         </StackPanel>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="打开桌面 Dock" Style="{StaticResource RowTitle}" Margin="18,0"/>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,16,0">
-                                            <ComboBox x:Name="DockCornerCombo" Style="{StaticResource DarkCombo}" Width="110" Margin="0,0,12,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
-                                            <CheckBox x:Name="DockCornerBox" Style="{StaticResource Switch}"/>
+                                            <ComboBox Style="{StaticResource DarkCombo}" x:Name="DockCornerCombo" Width="110" Margin="0,0,12,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
+                                            <ToggleButton x:Name="DockCornerBox" Style="{StaticResource ToggleButtonSwitch}"/>
                                         </StackPanel>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
@@ -411,7 +478,7 @@
                                             <TextBlock Text="全屏时暂停触发角" Style="{StaticResource RowTitle}"/>
                                             <TextBlock Text="两个功能不要用同一个角。唤出的 Dock 浮在窗口上方，鼠标离开后按常驻设置收回" Style="{StaticResource RowNote}"/>
                                         </StackPanel>
-                                        <CheckBox x:Name="FullscreenPauseBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="FullscreenPauseBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
@@ -440,7 +507,7 @@
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="悬停放大" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="MagnifyBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="MagnifyBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="64">
@@ -455,12 +522,12 @@
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="启动弹跳" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="BounceBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="BounceBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="显示运行指示点" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="RunningBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="RunningBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
@@ -471,7 +538,7 @@
                                 <StackPanel>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="图标形状" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <ComboBox x:Name="ShapeCombo" Style="{StaticResource DarkCombo}" Width="140" Margin="0,0,16,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
+                                        <ComboBox Style="{StaticResource DarkCombo}" x:Name="ShapeCombo" Width="140" Margin="0,0,16,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="64">
@@ -483,7 +550,7 @@
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="显示应用名称" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="ShowNamesBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="ShowNamesBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
@@ -493,12 +560,12 @@
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="名称颜色" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <ComboBox x:Name="NameColorCombo" Style="{StaticResource DarkCombo}" Width="120" Margin="0,0,16,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
+                                        <ComboBox Style="{StaticResource DarkCombo}" x:Name="NameColorCombo" Width="120" Margin="0,0,16,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="名称文字阴影" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="NameShadowBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="NameShadowBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
@@ -519,14 +586,14 @@
                                 <StackPanel>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="锁定图标" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="LockBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="LockBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="每页列数 / 行数" Style="{StaticResource RowTitle}" Margin="18,0"/>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,16,0">
-                                            <ComboBox x:Name="ColumnsCombo" Style="{StaticResource DarkCombo}" Width="72" Margin="0,0,8,0"/>
-                                            <ComboBox x:Name="RowsCombo" Style="{StaticResource DarkCombo}" Width="72"/>
+                                            <ComboBox Style="{StaticResource DarkCombo}" x:Name="ColumnsCombo" Width="72" Margin="0,0,8,0"/>
+                                            <ComboBox Style="{StaticResource DarkCombo}" x:Name="RowsCombo" Width="72"/>
                                         </StackPanel>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
@@ -552,7 +619,7 @@
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="64">
                                         <TextBlock Text="当前布局" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <ComboBox x:Name="LayoutCombo" Style="{StaticResource DarkCombo}" Width="180" Margin="0,0,16,0"/>
+                                        <ComboBox Style="{StaticResource DarkCombo}" x:Name="LayoutCombo" Width="180" Margin="0,0,16,0"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
@@ -568,37 +635,37 @@
                                 <StackPanel>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="时钟" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="ClockBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="ClockBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="CPU 和内存" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="MonitorBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="MonitorBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="音乐频谱" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="MusicBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="MusicBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="扫描 Steam 游戏" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="SteamBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="SteamBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="显示秒数" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="SecondsBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="SecondsBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="大时钟显示日期" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="DateBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="DateBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="时钟透明背景" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="ClockClearBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="ClockClearBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
@@ -608,12 +675,12 @@
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="鼠标移到顶部显示搜索" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="TopSearchBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="TopSearchBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="隐藏设置按钮" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="HideGearBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="HideGearBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
@@ -626,8 +693,8 @@
                                         <TextBlock Text="鼠标停在所选角落片刻后打开" Style="{StaticResource RowNote}"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,16,0">
-                                        <ComboBox x:Name="CornerCombo" Style="{StaticResource DarkCombo}" Width="120" Margin="0,0,12,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
-                                        <CheckBox x:Name="CornerBox" Style="{StaticResource Switch}"/>
+                                        <ComboBox Style="{StaticResource DarkCombo}" x:Name="CornerCombo" Width="120" Margin="0,0,12,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
+                                        <ToggleButton x:Name="CornerBox" Style="{StaticResource ToggleButtonSwitch}"/>
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -635,27 +702,27 @@
                                 <StackPanel>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="翻页速度" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <ComboBox x:Name="SpeedCombo" Style="{StaticResource DarkCombo}" Width="120" Margin="0,0,16,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
+                                        <ComboBox Style="{StaticResource DarkCombo}" x:Name="SpeedCombo" Width="120" Margin="0,0,16,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="短距离滑动回弹" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="ShortBounceBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="ShortBounceBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="点击弹性" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="ClickBounceBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="ClickBounceBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="悬停倾斜" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="HoverTiltBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="HoverTiltBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
                                         <TextBlock Text="前台全屏游戏时暂停触发角" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="GamePauseBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                        <ToggleButton x:Name="GamePauseBox" Style="{StaticResource ToggleButtonSwitch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>

@@ -32,13 +32,22 @@ internal static class Prompt
         {
             Title = title,
             Width = 360,
-            Height = 160,
+            Height = 180,
             WindowStartupLocation = WindowStartupLocation.CenterScreen,
             ResizeMode = ResizeMode.NoResize,
             Content = panel,
-            Background = System.Windows.Media.Brushes.White,
             Topmost = true
         };
+        window.Resources.MergedDictionaries.Add(new ResourceDictionary
+        {
+            Source = new Uri("pack://application:,,,/HandyControl;component/Themes/SkinDefault.xaml")
+        });
+        window.Resources.MergedDictionaries.Add(new ResourceDictionary
+        {
+            Source = new Uri("pack://application:,,,/HandyControl;component/Themes/Theme.xaml")
+        });
+        ok.Style = (Style)window.FindResource("ButtonPrimary");
+        cancel.Style = (Style)window.FindResource("ButtonDefault");
         string? value = null;
         ok.Click += (_, _) =>
         {

@@ -18,9 +18,9 @@
         PreviewMouseLeftButtonUp="OnTileUp">
     <Grid>
         <Image x:Name="Backdrop" Stretch="UniformToFill" IsHitTestVisible="False"/>
-        <Rectangle x:Name="Veil" Fill="Black" Opacity="0" IsHitTestVisible="False"/>
+        <Rectangle x:Name="Veil" Fill="#F6F3EE" Opacity="0" IsHitTestVisible="False"/>
         <Grid Margin="28,18,28,0" VerticalAlignment="Top">
-                <Border x:Name="MonitorPill" HorizontalAlignment="Center" Background="#5C1C1C1E" BorderBrush="#2EFFFFFF" BorderThickness="1" CornerRadius="14" Padding="10,5" VerticalAlignment="Center">
+                <Border x:Name="MonitorPill" HorizontalAlignment="Center" Background="#8C1C1C1E" BorderBrush="#55FFFFFF" BorderThickness="1" CornerRadius="16" Padding="12,6" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE950;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="#F5F5F7" VerticalAlignment="Center"/>
                         <TextBlock Text="CPU" Foreground="#F5F5F7" FontSize="12" Margin="5,0,0,0" VerticalAlignment="Center"/>
@@ -30,7 +30,7 @@
                         <TextBlock x:Name="RamText" Text="0%" Foreground="#F5F5F7" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Border>
-                <Border x:Name="SearchChrome" HorizontalAlignment="Right" Background="#5C1C1C1E" BorderBrush="#2EFFFFFF" BorderThickness="1" CornerRadius="17" Height="34" Padding="10,0,2,0" VerticalAlignment="Center">
+                <Border x:Name="SearchChrome" HorizontalAlignment="Right" Background="#8C1C1C1E" BorderBrush="#55FFFFFF" BorderThickness="1" CornerRadius="17" Height="36" Padding="12,0,4,0" VerticalAlignment="Center">
                     <DockPanel>
                         <Button x:Name="SettingsButton" DockPanel.Dock="Right" Content="&#xE713;" FontFamily="Segoe MDL2 Assets" Width="32" Height="32" Background="Transparent" Foreground="#F5F5F7" BorderThickness="0" Cursor="Hand" Focusable="False" FocusVisualStyle="{x:Null}" PreviewMouseLeftButtonUp="OnOpenSettings">
                             <Button.Template>
@@ -86,8 +86,10 @@
                         <DataTemplate>
                             <Button Style="{StaticResource TileButton}" VerticalAlignment="Top" HorizontalAlignment="Center" Click="OnTileClick" PreviewMouseRightButtonUp="OnTileMenu" PreviewMouseLeftButtonDown="OnTileDown" PreviewMouseMove="OnTileMove" Loaded="OnTileLoaded" MouseEnter="OnTileEnter" MouseLeave="OnTileLeave">
                                 <StackPanel>
-                                    <Image Width="58" Height="58" Source="{Binding Icon}" RenderOptions.BitmapScalingMode="HighQuality" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="{Binding Name}" Foreground="#D6FFFFFF" FontSize="11" FontWeight="Normal" TextAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="132" Margin="0,10,0,0" HorizontalAlignment="Center"/>
+                                    <Border x:Name="Well" Width="68" Height="68" CornerRadius="18" Background="#2AFFFFFF" HorizontalAlignment="Center">
+                                        <Image Width="42" Height="42" Source="{Binding Icon}" RenderOptions.BitmapScalingMode="HighQuality" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding Name}" Foreground="#EEFFFFFF" FontSize="12" FontWeight="Normal" TextAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="108" Margin="0,8,0,0" HorizontalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </DataTemplate>

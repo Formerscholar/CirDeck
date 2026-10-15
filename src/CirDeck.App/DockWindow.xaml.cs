@@ -188,7 +188,11 @@ public partial class DockWindow : Window
         Width = iconWidth + tailWidth;
         Height = plateHeight + IconSize * (magnify - 1) + 12;
         Plate.Height = plateHeight;
-        Plate.Background = settings.DockMaterial == "Dark" ? new SolidColorBrush(Color.FromArgb(0x88, 0x1C, 0x1C, 0x1E)) : new SolidColorBrush(Color.FromArgb(0x2E, 0xFF, 0xFF, 0xFF));
+        Plate.Background = settings.DockMaterial == "Dark"
+            ? new SolidColorBrush(Color.FromArgb(0xB0, 0x1C, 0x1C, 0x1E))
+            : new SolidColorBrush(Color.FromArgb(0x72, 0xFF, 0xFF, 0xFF));
+        Plate.BorderBrush = new SolidColorBrush(Color.FromArgb(0x99, 0xFF, 0xFF, 0xFF));
+        Plate.CornerRadius = new CornerRadius(18);
         _frame = DockGeometry.Place(request, _scale);
         ApplyFrame();
         if (IsVisible)
