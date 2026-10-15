@@ -75,11 +75,16 @@
             </StackPanel>
             <Grid x:Name="PageHost" Grid.Row="1" ClipToBounds="True">
                 <TextBlock x:Name="EmptyText" Text="正在读取开始菜单…" Foreground="White" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                <ItemsControl x:Name="Tiles" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ItemsControl x:Name="Tiles" HorizontalAlignment="Center" VerticalAlignment="Top" BorderThickness="0" Background="Transparent">
+                    <ItemsControl.Template>
+                        <ControlTemplate TargetType="ItemsControl">
+                            <ItemsPresenter VerticalAlignment="Top" HorizontalAlignment="Stretch"/>
+                        </ControlTemplate>
+                    </ItemsControl.Template>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Button Style="{StaticResource TileButton}" Click="OnTileClick" PreviewMouseRightButtonUp="OnTileMenu" PreviewMouseLeftButtonDown="OnTileDown" PreviewMouseMove="OnTileMove">
-                                <StackPanel VerticalAlignment="Center">
+                            <Button Style="{StaticResource TileButton}" VerticalAlignment="Top" HorizontalAlignment="Center" Click="OnTileClick" PreviewMouseRightButtonUp="OnTileMenu" PreviewMouseLeftButtonDown="OnTileDown" PreviewMouseMove="OnTileMove">
+                                <StackPanel>
                                     <Image Width="58" Height="58" Source="{Binding Icon}" RenderOptions.BitmapScalingMode="HighQuality" HorizontalAlignment="Center"/>
                                     <TextBlock Text="{Binding Name}" Foreground="#D6FFFFFF" FontSize="11" FontWeight="Normal" TextAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="132" Margin="0,10,0,0" HorizontalAlignment="Center"/>
                                 </StackPanel>
