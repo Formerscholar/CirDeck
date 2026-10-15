@@ -143,25 +143,23 @@ public partial class LaunchpadWindow : Window
         var height = ActualHeight > 240 ? ActualHeight : 1000;
         _cellW = Math.Min(CellWidth, Math.Max(128, (width - 80) / columns));
         _cellH = Math.Min(CellHeight, Math.Max(118, (height - 430) / rows));
-        FitTiles(_visible);
+        FitTiles();
     }
 
-    private void FitTiles(int visible)
+    private void FitTiles()
     {
         var columns = Math.Max(1, _session.Settings.Columns);
         var rows = Math.Max(1, _session.Settings.Rows);
-        var usedRows = visible <= 0 ? rows : Math.Min(rows, (visible + columns - 1) / columns);
-        var usedColumns = visible > 0 && visible < columns ? visible : columns;
-        if (_laidColumns != usedColumns)
+        if (_laidColumns != columns)
         {
             var factory = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.Primitives.UniformGrid));
-            factory.SetValue(System.Windows.Controls.Primitives.UniformGrid.ColumnsProperty, usedColumns);
+            factory.SetValue(System.Windows.Controls.Primitives.UniformGrid.ColumnsProperty, columns);
             Tiles.ItemsPanel = new ItemsPanelTemplate(factory);
-            _laidColumns = usedColumns;
+            _laidColumns = columns;
         }
 
-        Tiles.Width = Math.Max(1, usedColumns) * _cellW;
-        Tiles.Height = Math.Max(1, usedRows) * _cellH;
+        Tiles.Width = columns * _cellW;
+        Tiles.Height = rows * _cellH;
         Tiles.HorizontalAlignment = HorizontalAlignment.Center;
     }
 
@@ -220,7 +218,7 @@ public partial class LaunchpadWindow : Window
             _slide.X = 0;
         }
 
-        FitTiles(visible);
+        FitTiles();
         DrawDots(pages);
         UpdateWidgets();
     }
