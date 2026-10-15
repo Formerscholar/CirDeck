@@ -15,6 +15,12 @@ public partial class DockWindow : Window
     private readonly LibrarySession _session;
     private readonly IconBroker _icons;
     private readonly List<AppEntry> _entries = new();
+    private readonly List<long> _hwnds = new();
+    private readonly List<bool> _bins = new();
+    private IReadOnlyList<DesktopWindow> _desktop = Array.Empty<DesktopWindow>();
+    private bool _collapseRunning;
+    private bool _cornerReveal;
+    private readonly System.Windows.Threading.DispatcherTimer _clock = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly List<ScaleTransform> _transforms = new();
     private readonly List<Ellipse> _dots = new();
     private readonly List<Image> _images = new();
@@ -48,6 +54,9 @@ public partial class DockWindow : Window
         SizeChanged += (_, _) => { };
         _session.Changed += Rebuild;
         _icons.Ready += OnIconReady;
+        _clock.Tick += (_, _) => UpdateClock();
+        _clock.Start();
+        UpdateClock();
     }
 
     public event Action<AppEntry>? LaunchRequested;
@@ -64,7 +73,7 @@ public partial class DockWindow : Window
     public void ShowDock()
     {
         Rebuild();
-        if (_entries.Count == 0)
+        if (_entries.Count == 0 && !_session.Settings.ShowDockClock)
         {
             Hide();
             return;
@@ -72,7 +81,15 @@ public partial class DockWindow : Window
 
         Show();
         Place();
-        WindowChrome.KeepAbove(new WindowInteropHelper(this).Handle);
+        ApplyZOrder();
+    }
+
+    public bool ShouldStayOpen => _session.Settings.ShowDock && (_session.Settings.KeepDockOnDesktop || !_session.Settings.EnableDockHotCorner || _cornerReveal);
+
+    public void RevealFromCorner()
+    {
+        _cornerReveal = true;
+        ShowDock();
     }
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
@@ -86,16 +103,34 @@ public partial class DockWindow : Window
         base.OnClosing(e);
     }
 
-    private const double DockIcon = 56;
-    private const double DockGap = 12;
     private const double DockPadX = 18;
     private const double DockPadY = 12;
-    private const double DockGrow = 1.46;
+
+    private double IconSize => _session.Settings.DockIconSize;
+
+    private double IconGap => _session.Settings.DockSpacing;
+
+    private double IconGrow => _session.Settings.DockMagnify ? _session.Settings.DockMagnifyScale : 1;
+
+    public void SetDesktopWindows(IReadOnlyList<DesktopWindow> windows)
+    {
+        var next = string.Join("|", windows.Select(item => item.Path));
+        var current = string.Join("|", _desktop.Select(item => item.Path));
+        if (next == current)
+        {
+            return;
+        }
+
+        _desktop = windows;
+        _signature = string.Empty;
+        Rebuild();
+    }
 
     private void Rebuild()
     {
-        var entries = _session.DockEntries();
-        var signature = string.Join("|", entries.Select(entry => entry.TargetPath));
+        var settings = _session.Settings;
+        var entries = Compose(settings);
+        var signature = string.Join("|", entries.Select(entry => entry.App.TargetPath + ":" + entry.Handle)) + ":" + settings.DockIconSize + ":" + settings.DockSpacing + ":" + settings.DockMagnifyScale + ":" + settings.DockMaterial + ":" + settings.ShowDockClock + ":" + _collapseRunning;
         if (signature == _signature && IsVisible)
         {
             return;
@@ -103,7 +138,14 @@ public partial class DockWindow : Window
 
         _signature = signature;
         _entries.Clear();
-        _entries.AddRange(entries);
+        _hwnds.Clear();
+        _bins.Clear();
+        foreach (var entry in entries)
+        {
+            _entries.Add(entry.App);
+            _hwnds.Add(entry.Handle);
+            _bins.Add(entry.Bin);
+        }
         _transforms.Clear();
         _dots.Clear();
         _images.Clear();
@@ -114,15 +156,24 @@ public partial class DockWindow : Window
         {
             _scale[i] = 1;
             Surface.Children.Add(CreateVisual(_entries[i]));
+            if (i < _dots.Count)
+            {
+                _dots[i].Visibility = _hwnds[i] != 0 && settings.ShowRunningIndicators ? Visibility.Visible : Visibility.Collapsed;
+            }
         }
 
-        var settings = _session.Settings;
-        var magnify = settings.DockMagnify ? DockGrow : 1;
-        var request = new DockRequest(_entries.Count, DockIcon, DockGap, DockPadX, DockPadY, magnify, double.NaN, settings.DockMagnify);
-        var plateHeight = DockPadY * 2 + DockIcon;
-        Width = Math.Max(160, DockGeometry.ReserveWidth(_entries.Count, DockIcon, DockGap, DockPadX, magnify));
-        Height = plateHeight + DockIcon * (magnify - 1) + 12;
+        var magnify = IconGrow;
+        var request = new DockRequest(_entries.Count, IconSize, IconGap, DockPadX, DockPadY, magnify, double.NaN, settings.DockMagnify);
+        var plateHeight = DockPadY * 2 + IconSize;
+        var iconWidth = Math.Max(120, DockGeometry.ReserveWidth(_entries.Count, IconSize, IconGap, DockPadX, magnify));
+        LayoutTail(settings, plateHeight);
+        Tail.Measure(new Size(double.PositiveInfinity, plateHeight));
+        var tailWidth = Tail.Visibility == Visibility.Visible ? Tail.DesiredSize.Width + 8 : 0;
+        Surface.Width = iconWidth;
+        Width = iconWidth + tailWidth;
+        Height = plateHeight + IconSize * (magnify - 1) + 12;
         Plate.Height = plateHeight;
+        Plate.Background = settings.DockMaterial == "Dark" ? new SolidColorBrush(Color.FromArgb(0x88, 0x1C, 0x1C, 0x1E)) : new SolidColorBrush(Color.FromArgb(0x2E, 0xFF, 0xFF, 0xFF));
         _frame = DockGeometry.Place(request, _scale);
         ApplyFrame();
         if (IsVisible)
@@ -131,9 +182,141 @@ public partial class DockWindow : Window
         }
     }
 
+    private readonly record struct DockItem(AppEntry App, long Handle, bool Bin);
+
+    private List<DockItem> Compose(AppSettings settings)
+    {
+        var windows = _desktop;
+        var pinned = _session.DockEntries();
+        var pinnedPaths = new HashSet<string>(pinned.Select(app => app.TargetPath), StringComparer.OrdinalIgnoreCase);
+        var list = new List<DockItem>();
+        foreach (var app in pinned)
+        {
+            var match = windows.FirstOrDefault(item => string.Equals(item.Path, app.TargetPath, StringComparison.OrdinalIgnoreCase));
+            list.Add(new DockItem(app, match.Path == null ? 0 : match.Handle, false));
+        }
+
+        if (settings.ShowRunningApps && !_collapseRunning)
+        {
+            foreach (var window in windows)
+            {
+                if (settings.MergeRunningApps && pinnedPaths.Contains(window.Path))
+                {
+                    continue;
+                }
+
+                if (list.Any(item => string.Equals(item.App.TargetPath, window.Path, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
+                list.Add(new DockItem(new AppEntry(window.Name, window.Path, string.Empty, string.Empty, "Window"), window.Handle, false));
+            }
+        }
+
+        if (settings.ShowRecycleBin)
+        {
+            list.Add(new DockItem(new AppEntry("回收站", "shell:RecycleBinFolder", string.Empty, string.Empty, "Recycle"), 0, true));
+        }
+
+        return list;
+    }
+
+    private void LayoutTail(AppSettings settings, double plateHeight)
+    {
+        var show = settings.ShowDockClock || settings.ShowRunningApps;
+        Tail.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        Tail.Height = plateHeight;
+        TailLine.Height = Math.Max(16, IconSize * 0.45);
+        Chevron.Visibility = settings.ShowRunningApps ? Visibility.Visible : Visibility.Collapsed;
+        ClockBlock.Visibility = settings.ShowDockClock ? Visibility.Visible : Visibility.Collapsed;
+        Chevron.Content = _collapseRunning ? "\uE70D" : "\uE70E";
+        UpdateClock();
+    }
+
+    private void UpdateClock()
+    {
+        if (DockTime == null)
+        {
+            return;
+        }
+
+        var now = DateTime.Now;
+        DockTime.Text = now.ToString("HH:mm");
+        DockDate.Text = now.ToString("yyyy/M/d");
+    }
+
+    private void ApplyZOrder()
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        if (_cornerReveal || !_session.Settings.KeepDockOnDesktop)
+        {
+            WindowChrome.KeepAbove(hwnd);
+            return;
+        }
+
+        WindowChrome.LetCover(hwnd);
+    }
+
+    private void OnChevron(object sender, RoutedEventArgs e)
+    {
+        _collapseRunning = !_collapseRunning;
+        _signature = string.Empty;
+        Rebuild();
+        e.Handled = true;
+    }
+
+    private void OnDragOver(object sender, DragEventArgs e)
+    {
+        e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Move : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void OnDropFiles(object sender, DragEventArgs e)
+    {
+        if (!_session.Settings.ShowRecycleBin || e.Data.GetData(DataFormats.FileDrop) is not string[] files)
+        {
+            return;
+        }
+
+        foreach (var file in files)
+        {
+            RecycleBin.MoveToBin(file);
+        }
+    }
+
     private FrameworkElement CreateVisual(AppEntry entry)
     {
-        var size = 56d;
+        var size = IconSize;
+        if (entry.TargetPath.StartsWith("shell:", StringComparison.OrdinalIgnoreCase))
+        {
+            var glyph = new TextBlock
+            {
+                Text = "\uE74D",
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontSize = size * 0.46,
+                Foreground = Brushes.White,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                IsHitTestVisible = false
+            };
+            var bin = new Grid
+            {
+                Width = size,
+                Height = size,
+                ToolTip = entry.Name,
+                RenderTransformOrigin = new Point(0.5, 1),
+                Background = Brushes.Transparent
+            };
+            bin.Children.Add(glyph);
+            var binTransform = new ScaleTransform(1, 1);
+            bin.RenderTransform = binTransform;
+            _images.Add(new Image());
+            _dots.Add(new Ellipse { Visibility = Visibility.Collapsed });
+            _transforms.Add(binTransform);
+            return bin;
+        }
+
         var image = new Image
         {
             Width = size - 8,
@@ -195,11 +378,11 @@ public partial class DockWindow : Window
     {
         return new DockRequest(
             _entries.Count,
-            56,
-            12,
-            18,
-            12,
-            _session.Settings.DockMagnify ? 1.46 : 1,
+            IconSize,
+            IconGap,
+            DockPadX,
+            DockPadY,
+            IconGrow,
             pointerX,
             _session.Settings.DockMagnify);
     }
@@ -233,6 +416,15 @@ public partial class DockWindow : Window
     {
         _hoverIndex = -1;
         HidePreview();
+        if (_cornerReveal && !_session.Settings.KeepDockOnDesktop)
+        {
+            _cornerReveal = false;
+            Hide();
+            return;
+        }
+
+        _cornerReveal = false;
+        ApplyZOrder();
         EnsureTick();
     }
 
@@ -243,7 +435,7 @@ public partial class DockWindow : Window
             return;
         }
 
-        var source = LivePreview.FindMainWindow(_entries[index].TargetPath);
+        var source = _hwnds[index] != 0 ? new IntPtr(_hwnds[index]) : LivePreview.FindMainWindow(_entries[index].TargetPath);
         if (source == IntPtr.Zero)
         {
             return;
@@ -360,27 +552,70 @@ public partial class DockWindow : Window
         var area = MonitorLayout.WorkAreaFromCursor();
         var dpi = VisualTreeHelper.GetDpi(this);
         Left = area.Left / dpi.DpiScaleX + (area.Width / dpi.DpiScaleX - Width) / 2;
-        Top = area.Top / dpi.DpiScaleY + area.Height / dpi.DpiScaleY - Height - 18;
+        Top = area.Top / dpi.DpiScaleY + area.Height / dpi.DpiScaleY - Height - _session.Settings.DockBottomGap;
     }
 
     private void OnMouseUp(object sender, MouseButtonEventArgs e)
     {
         var index = Hit(e.GetPosition(Surface));
-        if (index >= 0)
+        if (index < 0)
         {
-            LaunchRequested?.Invoke(_entries[index]);
+            return;
         }
+
+        if (_session.Settings.DockBounce && index < _scale.Length)
+        {
+            _scale[index] = Math.Min(1.35, IconGrow);
+            EnsureTick();
+        }
+
+        if (_bins[index])
+        {
+            RecycleBin.Open();
+            return;
+        }
+
+        if (_hwnds[index] != 0)
+        {
+            DesktopWindows.Activate(_hwnds[index]);
+            return;
+        }
+
+        LaunchRequested?.Invoke(_entries[index]);
     }
 
     private void OnBackgroundMenu(object sender, MouseButtonEventArgs e)
     {
         var index = Hit(e.GetPosition(Surface));
         var menu = new ContextMenu();
-        if (index >= 0)
+        if (index >= 0 && _bins[index])
+        {
+            menu.Items.Add(Item("打开回收站", RecycleBin.Open));
+            menu.Items.Add(Item("清空回收站", RecycleBin.Empty));
+        }
+        else if (index >= 0)
         {
             var entry = _entries[index];
-            menu.Items.Add(Item("打开", () => LaunchRequested?.Invoke(entry)));
-            menu.Items.Add(Item("从 Dock 移除", () => _session.TogglePin(entry)));
+            var handle = _hwnds[index];
+            menu.Items.Add(Item("打开", () =>
+            {
+                if (handle != 0)
+                {
+                    DesktopWindows.Activate(handle);
+                }
+                else
+                {
+                    LaunchRequested?.Invoke(entry);
+                }
+            }));
+            if (_session.IsPinned(entry))
+            {
+                menu.Items.Add(Item("从 Dock 移除", () => _session.TogglePin(entry)));
+            }
+            else if (!entry.TargetPath.StartsWith("shell:", StringComparison.OrdinalIgnoreCase))
+            {
+                menu.Items.Add(Item("固定到 Dock", () => _session.TogglePin(entry)));
+            }
         }
 
         menu.Items.Add(Item("重新扫描", () => RescanRequested?.Invoke()));
@@ -396,8 +631,8 @@ public partial class DockWindow : Window
         for (var i = 0; i < _frame.Poses.Count; i++)
         {
             var pose = _frame.Poses[i];
-            var top = Height - Plate.Height + DockPadY + DockIcon * (1 - pose.Scale);
-            var bottom = Height - Plate.Height + DockPadY + DockIcon;
+            var top = Height - Plate.Height + DockPadY + IconSize * (1 - pose.Scale);
+            var bottom = Height - Plate.Height + DockPadY + IconSize;
             if (point.X < pose.Left || point.X > pose.Left + pose.Size || point.Y < top || point.Y > bottom)
             {
                 continue;

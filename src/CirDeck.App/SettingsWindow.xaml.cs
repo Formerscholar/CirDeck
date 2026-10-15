@@ -28,6 +28,20 @@ public partial class SettingsWindow : Window
         new("BottomRight", "右下角")
     };
 
+    private static readonly Choice[] DockCorners =
+    {
+        new("TopLeft", "左上"),
+        new("TopRight", "右上"),
+        new("BottomLeft", "左下"),
+        new("BottomRight", "右下")
+    };
+
+    private static readonly Choice[] Materials =
+    {
+        new("Glass", "轻透玻璃"),
+        new("Dark", "深色")
+    };
+
     public SettingsWindow(LibrarySession session)
     {
         _session = session;
@@ -53,11 +67,32 @@ public partial class SettingsWindow : Window
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         VersionText.Text = "当前版本 " + (version?.ToString(3) ?? "1.0.0");
         CheckText.Text = string.IsNullOrWhiteSpace(settings.LastUpdateCheck) ? "尚未检查更新" : "上次检查 " + settings.LastUpdateCheck;
+        ResidentBox.IsChecked = settings.KeepDockOnDesktop;
+        RunningAppsBox.IsChecked = settings.ShowRunningApps;
+        MergeBox.IsChecked = settings.MergeRunningApps;
+        DockClockBox.IsChecked = settings.ShowDockClock;
+        RecycleBox.IsChecked = settings.ShowRecycleBin;
+        HideTaskbarBox.IsChecked = settings.HideTaskbar;
+        DockCornerBox.IsChecked = settings.EnableDockHotCorner;
+        LaunchCornerBox.IsChecked = settings.EnableHotCorner;
+        FullscreenPauseBox.IsChecked = settings.PauseHotCornerWhenFullscreen;
+        BounceBox.IsChecked = settings.DockBounce;
+        MaterialCombo.ItemsSource = Materials;
+        MaterialCombo.SelectedValue = settings.DockMaterial;
+        DockCornerCombo.ItemsSource = DockCorners;
+        DockCornerCombo.SelectedValue = settings.DockHotCorner;
+        LaunchCornerCombo.ItemsSource = DockCorners;
+        LaunchCornerCombo.SelectedValue = settings.HotCorner;
+        IconSizeSlider.Value = settings.DockIconSize;
+        GapSlider.Value = settings.DockSpacing;
+        GrowSlider.Value = settings.DockMagnifyScale;
+        BottomSlider.Value = settings.DockBottomGap;
+        WriteDockLabels();
         ReloadLayouts();
         ReloadHidden();
         ShowPage(NavGeneral);
         _ready = true;
-        foreach (var box in new[] { StartupBox, OpenAtStartupBox, CloseAfterBox, ShowDockBox, MagnifyBox, RunningBox, ClockBox, MonitorBox, MusicBox, SteamBox, CornerBox, DesktopBox, AutoUpdateBox })
+        foreach (var box in new[] { StartupBox, OpenAtStartupBox, CloseAfterBox, ShowDockBox, MagnifyBox, RunningBox, ClockBox, MonitorBox, MusicBox, SteamBox, CornerBox, DesktopBox, AutoUpdateBox, ResidentBox, RunningAppsBox, MergeBox, DockClockBox, RecycleBox, HideTaskbarBox, DockCornerBox, LaunchCornerBox, FullscreenPauseBox, BounceBox })
         {
             box.Checked += (_, _) => SaveFlags();
             box.Unchecked += (_, _) => SaveFlags();
@@ -65,6 +100,28 @@ public partial class SettingsWindow : Window
 
         CornerCombo.SelectionChanged += (_, _) => SaveFlags();
         ScreenCombo.SelectionChanged += (_, _) => SaveFlags();
+        MaterialCombo.SelectionChanged += (_, _) => SaveFlags();
+        DockCornerCombo.SelectionChanged += (_, _) => SaveFlags();
+        LaunchCornerCombo.SelectionChanged += (_, _) => SaveFlags();
+    }
+
+    private void OnDockMetric(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        WriteDockLabels();
+        SaveFlags();
+    }
+
+    private void WriteDockLabels()
+    {
+        if (IconSizeText == null)
+        {
+            return;
+        }
+
+        IconSizeText.Text = ((int)Math.Round(IconSizeSlider.Value)).ToString() + " pt";
+        GapText.Text = ((int)Math.Round(GapSlider.Value)).ToString() + " pt";
+        GrowText.Text = GrowSlider.Value.ToString("0.00") + "x";
+        BottomText.Text = ((int)Math.Round(BottomSlider.Value)).ToString() + " pt";
     }
 
     private void OnNav(object sender, RoutedEventArgs e)
@@ -95,7 +152,7 @@ public partial class SettingsWindow : Window
         PageSubtitle.Text = selected.Name switch
         {
             nameof(NavGeneral) => "开机自启、全局快捷键、多显示器行为与检查更新",
-            nameof(NavDock) => "程序坞的显示、放大和运行指示",
+            nameof(NavDock) => "桌面 Dock、触发角与图标外观",
             nameof(NavLayout) => "切换、保存、导入和导出布局",
             nameof(NavWidgets) => "时钟、系统占用、频谱和 Steam",
             nameof(NavMotion) => "用屏幕热角唤出启动台",
@@ -118,18 +175,40 @@ public partial class SettingsWindow : Window
         settings.ShowDock = ShowDockBox.IsChecked == true;
         settings.DockMagnify = MagnifyBox.IsChecked == true;
         settings.ShowRunningIndicators = RunningBox.IsChecked == true;
+        settings.KeepDockOnDesktop = ResidentBox.IsChecked == true;
+        settings.ShowRunningApps = RunningAppsBox.IsChecked == true;
+        settings.MergeRunningApps = MergeBox.IsChecked == true;
+        settings.ShowDockClock = DockClockBox.IsChecked == true;
+        settings.ShowRecycleBin = RecycleBox.IsChecked == true;
+        settings.HideTaskbar = HideTaskbarBox.IsChecked == true;
+        settings.EnableDockHotCorner = DockCornerBox.IsChecked == true;
+        settings.EnableHotCorner = LaunchCornerBox.IsChecked == true || CornerBox.IsChecked == true;
+        settings.PauseHotCornerWhenFullscreen = FullscreenPauseBox.IsChecked == true;
+        settings.DockBounce = BounceBox.IsChecked == true;
+        settings.DockIconSize = IconSizeSlider.Value;
+        settings.DockSpacing = GapSlider.Value;
+        settings.DockMagnifyScale = GrowSlider.Value;
+        settings.DockBottomGap = BottomSlider.Value;
+        if (MaterialCombo.SelectedValue is string material)
+        {
+            settings.DockMaterial = material;
+        }
+
+        if (DockCornerCombo.SelectedValue is string dockCorner)
+        {
+            settings.DockHotCorner = dockCorner;
+        }
+
+        if (LaunchCornerCombo.SelectedValue is string launchCorner)
+        {
+            settings.HotCorner = launchCorner;
+        }
         settings.ShowClock = ClockBox.IsChecked == true;
         settings.ShowSystemMonitor = MonitorBox.IsChecked == true;
         settings.ShowMusicSpectrum = MusicBox.IsChecked == true;
         settings.ScanSteam = SteamBox.IsChecked == true;
-        settings.EnableHotCorner = CornerBox.IsChecked == true;
         settings.KeepOnDesktop = DesktopBox.IsChecked == true;
         settings.AutoCheckUpdates = AutoUpdateBox.IsChecked == true;
-        if (CornerCombo.SelectedValue is string corner)
-        {
-            settings.HotCorner = corner;
-        }
-
         if (ScreenCombo.SelectedValue is string screen)
         {
             settings.DisplayScreen = screen;
@@ -148,6 +227,21 @@ public partial class SettingsWindow : Window
         settings.ShowDock = fresh.ShowDock;
         settings.DockMagnify = fresh.DockMagnify;
         settings.ShowRunningIndicators = fresh.ShowRunningIndicators;
+        settings.KeepDockOnDesktop = fresh.KeepDockOnDesktop;
+        settings.ShowRunningApps = fresh.ShowRunningApps;
+        settings.MergeRunningApps = fresh.MergeRunningApps;
+        settings.ShowDockClock = fresh.ShowDockClock;
+        settings.ShowRecycleBin = fresh.ShowRecycleBin;
+        settings.HideTaskbar = fresh.HideTaskbar;
+        settings.EnableDockHotCorner = fresh.EnableDockHotCorner;
+        settings.DockHotCorner = fresh.DockHotCorner;
+        settings.PauseHotCornerWhenFullscreen = fresh.PauseHotCornerWhenFullscreen;
+        settings.DockBounce = fresh.DockBounce;
+        settings.DockMaterial = fresh.DockMaterial;
+        settings.DockIconSize = fresh.DockIconSize;
+        settings.DockSpacing = fresh.DockSpacing;
+        settings.DockMagnifyScale = fresh.DockMagnifyScale;
+        settings.DockBottomGap = fresh.DockBottomGap;
         settings.ShowClock = fresh.ShowClock;
         settings.ShowSystemMonitor = fresh.ShowSystemMonitor;
         settings.ShowMusicSpectrum = fresh.ShowMusicSpectrum;
@@ -166,6 +260,16 @@ public partial class SettingsWindow : Window
         ShowDockBox.IsChecked = settings.ShowDock;
         MagnifyBox.IsChecked = settings.DockMagnify;
         RunningBox.IsChecked = settings.ShowRunningIndicators;
+        ResidentBox.IsChecked = settings.KeepDockOnDesktop;
+        RunningAppsBox.IsChecked = settings.ShowRunningApps;
+        MergeBox.IsChecked = settings.MergeRunningApps;
+        DockClockBox.IsChecked = settings.ShowDockClock;
+        RecycleBox.IsChecked = settings.ShowRecycleBin;
+        HideTaskbarBox.IsChecked = settings.HideTaskbar;
+        DockCornerBox.IsChecked = settings.EnableDockHotCorner;
+        LaunchCornerBox.IsChecked = settings.EnableHotCorner;
+        FullscreenPauseBox.IsChecked = settings.PauseHotCornerWhenFullscreen;
+        BounceBox.IsChecked = settings.DockBounce;
         ClockBox.IsChecked = settings.ShowClock;
         MonitorBox.IsChecked = settings.ShowSystemMonitor;
         MusicBox.IsChecked = settings.ShowMusicSpectrum;
@@ -174,6 +278,14 @@ public partial class SettingsWindow : Window
         DesktopBox.IsChecked = settings.KeepOnDesktop;
         AutoUpdateBox.IsChecked = settings.AutoCheckUpdates;
         CornerCombo.SelectedValue = settings.HotCorner;
+        LaunchCornerCombo.SelectedValue = settings.HotCorner;
+        DockCornerCombo.SelectedValue = settings.DockHotCorner;
+        MaterialCombo.SelectedValue = settings.DockMaterial;
+        IconSizeSlider.Value = settings.DockIconSize;
+        GapSlider.Value = settings.DockSpacing;
+        GrowSlider.Value = settings.DockMagnifyScale;
+        BottomSlider.Value = settings.DockBottomGap;
+        WriteDockLabels();
         ScreenCombo.SelectedValue = settings.DisplayScreen;
         _ready = true;
         _session.CommitSettings();

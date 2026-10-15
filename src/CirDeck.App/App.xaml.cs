@@ -83,13 +83,16 @@ public partial class App : Application
         _dock.RescanRequested += () => _session.Rescan();
         _session.Changed += () =>
         {
+            TaskbarGate.Apply(_session.Settings.HideTaskbar);
             if (_launchpad.IsVisible)
             {
+                SyncDock();
                 return;
             }
 
             SyncDock();
         };
+        TaskbarGate.Apply(_session.Settings.HideTaskbar);
 
         if (_session.Settings.OpenLaunchpadAtStartup)
         {
@@ -125,7 +128,19 @@ public partial class App : Application
         var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(40) };
         timer.Tick += (_, _) =>
         {
-            if (_session == null || _launchpad == null || !_session.Settings.EnableHotCorner || _launchpad.IsVisible)
+            if (_session == null || _launchpad == null)
+            {
+                armed = true;
+                return;
+            }
+
+            if (_session.Settings.PauseHotCornerWhenFullscreen && DesktopWindows.ForegroundIsFullscreen())
+            {
+                armed = true;
+                return;
+            }
+
+            if (!_session.Settings.EnableHotCorner && !_session.Settings.EnableDockHotCorner)
             {
                 armed = true;
                 return;
@@ -137,7 +152,9 @@ public partial class App : Application
             }
 
             var area = MonitorLayout.WorkAreaFromCursor();
-            var inside = HotCorner.Contains(_session.Settings.HotCorner, x, y, area.Left, area.Top, area.Right, area.Bottom);
+            var launch = _session.Settings.EnableHotCorner && !_launchpad.IsVisible && HotCorner.Contains(_session.Settings.HotCorner, x, y, area.Left, area.Top, area.Right, area.Bottom);
+            var dock = _session.Settings.EnableDockHotCorner && HotCorner.Contains(_session.Settings.DockHotCorner, x, y, area.Left, area.Top, area.Right, area.Bottom);
+            var inside = launch || dock;
             if (!inside)
             {
                 armed = true;
@@ -153,8 +170,16 @@ public partial class App : Application
             if ((DateTime.UtcNow - insideSince).TotalMilliseconds >= 280)
             {
                 armed = false;
-                _launchpad.Present();
-                if (_session?.Settings.ShowDock == true)
+                if (launch)
+                {
+                    _launchpad.Present();
+                }
+
+                if (dock)
+                {
+                    _dock?.RevealFromCorner();
+                }
+                else if (_session.Settings.ShowDock)
                 {
                     _dock?.ShowDock();
                 }
@@ -191,7 +216,7 @@ public partial class App : Application
             return;
         }
 
-        if (_session.Settings.ShowDock)
+        if (_dock.ShouldStayOpen)
         {
             _dock.ShowDock();
         }
@@ -246,35 +271,16 @@ public partial class App : Application
         var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1.5) };
         timer.Tick += (_, _) =>
         {
-            if (_dock == null || !_dock.IsVisible || _session?.Settings.ShowRunningIndicators != true)
+            if (_dock == null || _session == null)
             {
                 return;
             }
 
-            Task.Run(() =>
-            {
-                var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                foreach (var process in Process.GetProcesses())
-                {
-                    try
-                    {
-                        names.Add(process.ProcessName);
-                    }
-                    catch (InvalidOperationException)
-                    {
-                    }
-                    finally
-                    {
-                        process.Dispose();
-                    }
-                }
-
-                return names;
-            }).ContinueWith(task =>
+            Task.Run(DesktopWindows.List).ContinueWith(task =>
             {
                 if (task.Status == TaskStatus.RanToCompletion)
                 {
-                    Dispatcher.BeginInvoke(new Action(() => _dock?.SetRunning(task.Result)));
+                    Dispatcher.BeginInvoke(new Action(() => _dock.SetDesktopWindows(task.Result)));
                 }
             });
         };
@@ -316,6 +322,7 @@ public partial class App : Application
     private void ExitApplication()
     {
         _exiting = true;
+        TaskbarGate.Apply(false);
         _launchpad?.AllowClose();
         _dock?.AllowClose();
         _icons?.Dispose();

@@ -10,12 +10,31 @@
         Background="Transparent"
         AllowsTransparency="True"
         UseLayoutRounding="True"
+        AllowDrop="True"
+        Drop="OnDropFiles"
+        DragOver="OnDragOver"
         MouseMove="OnMouseMove"
         MouseLeave="OnMouseLeave"
         MouseLeftButtonUp="OnMouseUp"
         MouseRightButtonUp="OnBackgroundMenu">
     <Grid>
         <Border x:Name="Plate" VerticalAlignment="Bottom" Background="#2EFFFFFF" BorderBrush="#40FFFFFF" BorderThickness="1" CornerRadius="16" IsHitTestVisible="False"/>
-        <Canvas x:Name="Surface"/>
+        <Canvas x:Name="Surface" HorizontalAlignment="Left"/>
+        <StackPanel x:Name="Tail" Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,10,0">
+            <Border x:Name="TailLine" Width="1" Background="#66FFFFFF" Margin="6,0" HorizontalAlignment="Center"/>
+            <Button x:Name="Chevron" Content="&#xE70E;" FontFamily="Segoe MDL2 Assets" Width="28" Foreground="#F5F5F7" Background="Transparent" BorderThickness="0" Cursor="Hand" Focusable="False" FocusVisualStyle="{x:Null}" Click="OnChevron">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+            <StackPanel x:Name="ClockBlock" Margin="8,0,4,0" VerticalAlignment="Center">
+                <TextBlock x:Name="DockTime" Text="00:00" Foreground="White" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <TextBlock x:Name="DockDate" Text="" Foreground="#D0FFFFFF" FontSize="10" HorizontalAlignment="Center" Margin="0,1,0,0"/>
+            </StackPanel>
+        </StackPanel>
     </Grid>
 </Window>

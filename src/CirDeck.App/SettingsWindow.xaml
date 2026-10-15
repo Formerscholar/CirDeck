@@ -306,24 +306,159 @@
                             </Border>
                         </StackPanel>
                         <StackPanel x:Name="PageDock" Visibility="Collapsed">
+                            <TextBlock TextWrapping="Wrap" Foreground="#C7C7CC" FontSize="13" Margin="6,0,6,14" Text="Dock 用来快速打开固定应用，也可以在右侧显示正在运行的窗口。系统托盘图标仍由 Windows 自己托管。"/>
+                            <TextBlock Text="桌面 Dock" Style="{StaticResource Section}"/>
                             <Border Style="{StaticResource Card}">
                                 <StackPanel>
-                                    <Grid MinHeight="58">
-                                        <TextBlock Text="显示程序坞" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                    <Grid MinHeight="64">
+                                        <StackPanel VerticalAlignment="Center" Margin="18,8,70,8">
+                                            <TextBlock Text="显示程序坞" Style="{StaticResource RowTitle}"/>
+                                        </StackPanel>
                                         <CheckBox x:Name="ShowDockBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
-                                    <Grid MinHeight="58">
-                                        <TextBlock Text="鼠标靠近时放大" Style="{StaticResource RowTitle}" Margin="18,0"/>
-                                        <CheckBox x:Name="MagnifyBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    <Grid MinHeight="68">
+                                        <StackPanel VerticalAlignment="Center" Margin="18,8,70,8">
+                                            <TextBlock Text="在桌面常驻 Dock" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="快速启动固定应用，打开其他窗口时可以被盖住" Style="{StaticResource RowNote}"/>
+                                        </StackPanel>
+                                        <CheckBox x:Name="ResidentBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="68">
+                                        <StackPanel VerticalAlignment="Center" Margin="18,8,70,8">
+                                            <TextBlock Text="Dock 右侧显示打开的应用" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="包括最小化窗口。同一应用只显示一个，点击恢复，悬停预览，关闭后移除" Style="{StaticResource RowNote}"/>
+                                        </StackPanel>
+                                        <CheckBox x:Name="RunningAppsBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="68">
+                                        <StackPanel VerticalAlignment="Center" Margin="18,8,70,8">
+                                            <TextBlock Text="合并固定图标与运行中的应用" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="已固定的应用不在右侧再出现一次，点固定图标即可恢复窗口" Style="{StaticResource RowNote}"/>
+                                        </StackPanel>
+                                        <CheckBox x:Name="MergeBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="64">
+                                        <StackPanel VerticalAlignment="Center" Margin="18,8,70,8">
+                                            <TextBlock Text="Dock 时间与日期" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="显示在最右侧，使用系统本地时间" Style="{StaticResource RowNote}"/>
+                                        </StackPanel>
+                                        <CheckBox x:Name="DockClockBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="64">
+                                        <StackPanel VerticalAlignment="Center" Margin="18,8,70,8">
+                                            <TextBlock Text="显示回收站" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="点击打开，拖入文件回收，右键清空" Style="{StaticResource RowNote}"/>
+                                        </StackPanel>
+                                        <CheckBox x:Name="RecycleBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                     <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
                                     <Grid MinHeight="58">
-                                        <TextBlock Text="显示正在运行的圆点" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <TextBlock Text="Dock 背景" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <ComboBox x:Name="MaterialCombo" Style="{StaticResource DarkCombo}" Width="140" Margin="0,0,16,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="72">
+                                        <StackPanel VerticalAlignment="Center" Margin="18,8,16,8">
+                                            <DockPanel>
+                                                <TextBlock x:Name="BottomText" DockPanel.Dock="Right" Text="8 pt" Foreground="#D1D1D6" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                                <TextBlock Text="桌面 Dock 离底部高度" Style="{StaticResource RowTitle}"/>
+                                            </DockPanel>
+                                            <Slider x:Name="BottomSlider" Minimum="0" Maximum="40" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,8,0,0" ValueChanged="OnDockMetric"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="68">
+                                        <StackPanel VerticalAlignment="Center" Margin="18,8,70,8">
+                                            <TextBlock Text="隐藏系统任务栏" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="关闭开关或退出 CirDeck 后会恢复系统任务栏" Style="{StaticResource RowNote}"/>
+                                        </StackPanel>
+                                        <CheckBox x:Name="HideTaskbarBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                            <TextBlock Text="触发角" Style="{StaticResource Section}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="打开启动台" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,16,0">
+                                            <ComboBox x:Name="LaunchCornerCombo" Style="{StaticResource DarkCombo}" Width="110" Margin="0,0,12,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
+                                            <CheckBox x:Name="LaunchCornerBox" Style="{StaticResource Switch}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="打开桌面 Dock" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,16,0">
+                                            <ComboBox x:Name="DockCornerCombo" Style="{StaticResource DarkCombo}" Width="110" Margin="0,0,12,0" DisplayMemberPath="Label" SelectedValuePath="Value"/>
+                                            <CheckBox x:Name="DockCornerBox" Style="{StaticResource Switch}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="64">
+                                        <StackPanel VerticalAlignment="Center" Margin="18,8,70,8">
+                                            <TextBlock Text="全屏时暂停触发角" Style="{StaticResource RowTitle}"/>
+                                            <TextBlock Text="两个功能不要用同一个角。唤出的 Dock 浮在窗口上方，鼠标离开后按常驻设置收回" Style="{StaticResource RowNote}"/>
+                                        </StackPanel>
+                                        <CheckBox x:Name="FullscreenPauseBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                            <TextBlock Text="图标外观" Style="{StaticResource Section}"/>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <Grid MinHeight="64">
+                                        <StackPanel VerticalAlignment="Center" Margin="18,8,16,8">
+                                            <DockPanel>
+                                                <TextBlock x:Name="IconSizeText" DockPanel.Dock="Right" Text="56 pt" Foreground="#D1D1D6" VerticalAlignment="Center"/>
+                                                <TextBlock Text="图标大小" Style="{StaticResource RowTitle}"/>
+                                            </DockPanel>
+                                            <Slider x:Name="IconSizeSlider" Minimum="32" Maximum="80" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,8,0,0" ValueChanged="OnDockMetric"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="64">
+                                        <StackPanel VerticalAlignment="Center" Margin="18,8,16,8">
+                                            <DockPanel>
+                                                <TextBlock x:Name="GapText" DockPanel.Dock="Right" Text="15 pt" Foreground="#D1D1D6" VerticalAlignment="Center"/>
+                                                <TextBlock Text="图标间距" Style="{StaticResource RowTitle}"/>
+                                            </DockPanel>
+                                            <Slider x:Name="GapSlider" Minimum="0" Maximum="40" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,8,0,0" ValueChanged="OnDockMetric"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="悬停放大" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <CheckBox x:Name="MagnifyBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="64">
+                                        <StackPanel VerticalAlignment="Center" Margin="18,8,16,8">
+                                            <DockPanel>
+                                                <TextBlock x:Name="GrowText" DockPanel.Dock="Right" Text="1.75x" Foreground="#D1D1D6" VerticalAlignment="Center"/>
+                                                <TextBlock Text="放大倍数" Style="{StaticResource RowTitle}"/>
+                                            </DockPanel>
+                                            <Slider x:Name="GrowSlider" Minimum="1" Maximum="2.2" TickFrequency="0.05" IsSnapToTickEnabled="True" Margin="0,8,0,0" ValueChanged="OnDockMetric"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="启动弹跳" Style="{StaticResource RowTitle}" Margin="18,0"/>
+                                        <CheckBox x:Name="BounceBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
+                                    </Grid>
+                                    <Rectangle Height="1" Fill="#14FFFFFF" Margin="16,0"/>
+                                    <Grid MinHeight="58">
+                                        <TextBlock Text="显示运行指示点" Style="{StaticResource RowTitle}" Margin="18,0"/>
                                         <CheckBox x:Name="RunningBox" Style="{StaticResource Switch}" HorizontalAlignment="Right" Margin="0,0,16,0"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
+                            <TextBlock Text="把应用拖到启动台里固定，或在 Dock 图标上右键固定。" Foreground="#8E8E93" FontSize="12" Margin="6,4,0,0"/>
                         </StackPanel>
                         <StackPanel x:Name="PageLayout" Visibility="Collapsed">
                             <Border Style="{StaticResource Card}">
