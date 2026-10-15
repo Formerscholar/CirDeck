@@ -5,6 +5,7 @@ namespace CirDeck.Interop;
 
 internal static class NativeMethods
 {
+    public const int MonitorDefaultToPrimary = 1;
     public const int MonitorDefaultToNearest = 2;
     public const uint ModAlt = 0x0001;
     public const uint ModControl = 0x0002;
@@ -33,6 +34,11 @@ internal static class NativeMethods
 
     [DllImport("user32.dll")]
     public static extern bool GetCursorPos(out Point point);
+
+    public delegate bool MonitorEnumProc(IntPtr monitor, IntPtr hdc, IntPtr rect, IntPtr data);
+
+    [DllImport("user32.dll")]
+    public static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr clip, MonitorEnumProc proc, IntPtr data);
 
     [DllImport("user32.dll")]
     public static extern IntPtr MonitorFromPoint(Point point, int flags);
@@ -195,6 +201,25 @@ public static class MonitorLayout
         }
 
         return new PixelRect(info.Work.Left, info.Work.Top, info.Work.Right, info.Work.Bottom);
+    }
+
+    public static PixelRect WorkAreaPrimary()
+    {
+        PixelRect found = default;
+        var located = false;
+        NativeMethods.EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, (monitor, _, _, _) =>
+        {
+            var info = new NativeMethods.MonitorInfo { Size = Marshal.SizeOf<NativeMethods.MonitorInfo>() };
+            if (!NativeMethods.GetMonitorInfo(monitor, ref info) || (info.Flags & 1) == 0)
+            {
+                return true;
+            }
+
+            found = new PixelRect(info.Work.Left, info.Work.Top, info.Work.Right, info.Work.Bottom);
+            located = true;
+            return false;
+        }, IntPtr.Zero);
+        return located ? found : WorkAreaFromCursor();
     }
 
     public static bool TryGetCursor(out int x, out int y)

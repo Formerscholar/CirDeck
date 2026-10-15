@@ -213,11 +213,7 @@ public partial class App : Application
 
             if (IsWeChat(entry) && WeChatWake.TryActivate())
             {
-                if (_session?.Settings.CloseAfterLaunch == true)
-                {
-                    _launchpad?.Dismiss();
-                }
-
+                DismissAfterLaunch();
                 return;
             }
 
@@ -234,7 +230,12 @@ public partial class App : Application
             Log.Write(ex);
         }
 
-        if (_session?.Settings.CloseAfterLaunch == true)
+        DismissAfterLaunch();
+    }
+
+    private void DismissAfterLaunch()
+    {
+        if (_session?.Settings.CloseAfterLaunch == true && _session.Settings.KeepOnDesktop != true)
         {
             _launchpad?.Dismiss();
         }

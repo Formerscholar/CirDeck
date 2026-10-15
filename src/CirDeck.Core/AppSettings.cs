@@ -44,6 +44,14 @@ public sealed class AppSettings
 
     public string ActiveLayoutId { get; set; } = "default";
 
+    public string DisplayScreen { get; set; } = "Cursor";
+
+    public bool KeepOnDesktop { get; set; }
+
+    public bool AutoCheckUpdates { get; set; } = true;
+
+    public string LastUpdateCheck { get; set; } = "";
+
     public void Clamp()
     {
         Columns = Math.Clamp(Columns, 4, 12);
@@ -62,5 +70,12 @@ public sealed class AppSettings
         {
             ActiveLayoutId = "default";
         }
+
+        if (DisplayScreen is not ("Cursor" or "Primary"))
+        {
+            DisplayScreen = "Cursor";
+        }
+
+        LastUpdateCheck ??= "";
     }
 }

@@ -29,9 +29,17 @@
                         <TextBlock x:Name="RamText" Text="0%" Foreground="#F5F5F7" FontSize="12" FontWeight="SemiBold" Margin="4,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Border>
-                <Border HorizontalAlignment="Right" Background="#5C1C1C1E" BorderBrush="#2EFFFFFF" BorderThickness="1" CornerRadius="17" Height="34" Padding="8,0,4,0" VerticalAlignment="Center">
+                <Border HorizontalAlignment="Right" Background="#5C1C1C1E" BorderBrush="#2EFFFFFF" BorderThickness="1" CornerRadius="17" Height="34" Padding="10,0,2,0" VerticalAlignment="Center">
                     <DockPanel>
-                        <Button x:Name="SettingsButton" DockPanel.Dock="Right" Content="&#xE713;" FontFamily="Segoe MDL2 Assets" Width="28" Background="Transparent" Foreground="#F5F5F7" BorderThickness="0" Click="OnOpenSettings"/>
+                        <Button x:Name="SettingsButton" DockPanel.Dock="Right" Content="&#xE713;" FontFamily="Segoe MDL2 Assets" Width="32" Height="32" Background="Transparent" Foreground="#F5F5F7" BorderThickness="0" Cursor="Hand" Focusable="False" FocusVisualStyle="{x:Null}" PreviewMouseLeftButtonUp="OnOpenSettings">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="Transparent">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
                         <TextBlock DockPanel.Dock="Right" Text="Alt + Space" Foreground="#99F5F5F7" FontSize="11" VerticalAlignment="Center" Margin="8,0,6,0"/>
                         <Grid Width="250">
                             <TextBox x:Name="SearchBox" Style="{StaticResource SearchBox}" TextChanged="OnSearchChanged"/>

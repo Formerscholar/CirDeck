@@ -30,6 +30,10 @@ public partial class LaunchpadWindow : Window
     private double _slideTarget;
     private double _slideAtPress;
     private bool _sliding;
+    private bool _ignoreGesture;
+    private bool _settingsOpen;
+    private int _visible;
+    private int _laidColumns = -1;
     private bool _slideExit;
     private int _slideDir;
     private TimeSpan _slideClock;
@@ -115,7 +119,10 @@ public partial class LaunchpadWindow : Window
 
     private void PlaceOnCursorMonitor()
     {
-        var area = MonitorLayout.WorkAreaFromCursor();
+        Topmost = !_session.Settings.KeepOnDesktop;
+        var area = _session.Settings.DisplayScreen == "Primary"
+            ? MonitorLayout.WorkAreaPrimary()
+            : MonitorLayout.WorkAreaFromCursor();
         var dpi = VisualTreeHelper.GetDpi(this);
         Left = area.Left / dpi.DpiScaleX;
         Top = area.Top / dpi.DpiScaleY;
@@ -136,11 +143,25 @@ public partial class LaunchpadWindow : Window
         var height = ActualHeight > 240 ? ActualHeight : 1000;
         _cellW = Math.Min(CellWidth, Math.Max(128, (width - 80) / columns));
         _cellH = Math.Min(CellHeight, Math.Max(118, (height - 430) / rows));
-        var factory = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.Primitives.UniformGrid));
-        factory.SetValue(System.Windows.Controls.Primitives.UniformGrid.ColumnsProperty, columns);
-        Tiles.ItemsPanel = new ItemsPanelTemplate(factory);
-        Tiles.Width = columns * _cellW;
-        Tiles.Height = rows * _cellH;
+        FitTiles(_visible);
+    }
+
+    private void FitTiles(int visible)
+    {
+        var columns = Math.Max(1, _session.Settings.Columns);
+        var rows = Math.Max(1, _session.Settings.Rows);
+        var usedRows = visible <= 0 ? rows : Math.Min(rows, (visible + columns - 1) / columns);
+        var usedColumns = visible > 0 && visible < columns ? visible : columns;
+        if (_laidColumns != usedColumns)
+        {
+            var factory = new System.Windows.FrameworkElementFactory(typeof(System.Windows.Controls.Primitives.UniformGrid));
+            factory.SetValue(System.Windows.Controls.Primitives.UniformGrid.ColumnsProperty, usedColumns);
+            Tiles.ItemsPanel = new ItemsPanelTemplate(factory);
+            _laidColumns = usedColumns;
+        }
+
+        Tiles.Width = Math.Max(1, usedColumns) * _cellW;
+        Tiles.Height = Math.Max(1, usedRows) * _cellH;
         Tiles.HorizontalAlignment = HorizontalAlignment.Center;
     }
 
@@ -193,11 +214,13 @@ public partial class LaunchpadWindow : Window
         FolderTitle.Visibility = string.IsNullOrEmpty(_session.OpenFolderId) ? Visibility.Collapsed : Visibility.Visible;
         var open = _session.Library.Folders.FirstOrDefault(folder => folder.Id == _session.OpenFolderId);
         FolderTitle.Text = open == null ? string.Empty : open.Name;
-        var columns = Math.Max(1, _session.Settings.Columns);
-        var usedRows = visible == 0
-            ? Math.Max(1, _session.Settings.Rows)
-            : Math.Min(Math.Max(1, _session.Settings.Rows), (visible + columns - 1) / columns);
-        Tiles.Height = usedRows * _cellH;
+        _visible = visible;
+        if (!_sliding)
+        {
+            _slide.X = 0;
+        }
+
+        FitTiles(visible);
         DrawDots(pages);
         UpdateWidgets();
     }
@@ -481,10 +504,13 @@ public partial class LaunchpadWindow : Window
 
     private void OnPointerDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.OriginalSource is DependencyObject source && IsInside(source, typeof(TextBox)))
+        if (e.OriginalSource is DependencyObject source && (IsInside(source, typeof(TextBox)) || IsInside(source, SettingsButton)))
         {
+            _ignoreGesture = true;
             return;
         }
+
+        _ignoreGesture = false;
 
         StopSlide();
         _pressPoint = e.GetPosition(this);
@@ -512,7 +538,7 @@ public partial class LaunchpadWindow : Window
         _dragged = true;
         if (Math.Abs(dx) > Math.Abs(dy) && string.IsNullOrWhiteSpace(SearchBox.Text))
         {
-            _slide.X = Rubber(_slideAtPress + dx);
+            _slide.X = LimitEdge(Rubber(_slideAtPress + dx));
         }
     }
 
@@ -566,11 +592,62 @@ public partial class LaunchpadWindow : Window
 
     private void OnOpenSettings(object sender, RoutedEventArgs e)
     {
-        var window = new SettingsWindow(_session) { Owner = this };
-        window.ShowDialog();
+        e.Handled = true;
+        if (_settingsOpen)
+        {
+            return;
+        }
+
+        _settingsOpen = true;
+        _ignoreGesture = true;
+        Mouse.Capture(null);
+        OpenSettingsDialog();
+    }
+
+    private void OpenSettingsDialog()
+    {
+        var topmost = Topmost;
+        Topmost = false;
+        try
+        {
+            var window = new SettingsWindow(_session)
+            {
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Topmost = true
+            };
+            window.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            Log.Write(ex);
+        }
+        finally
+        {
+            _settingsOpen = false;
+            Topmost = topmost;
+        }
+
         _tiles.Clear();
         ApplyColumns();
+        PlaceOnCursorMonitor();
         Refresh();
+    }
+
+    private double LimitEdge(double offset)
+    {
+        var pages = PageLayout.PageCount(_results.Count, PageLayout.PageSize(_session.Settings.Columns, _session.Settings.Rows));
+        if (_page <= 0 && offset > 0)
+        {
+            return Math.Min(offset, 24);
+        }
+
+        if (_page >= pages - 1 && offset < 0)
+        {
+            return Math.Max(offset, -24);
+        }
+
+        return offset;
     }
 
     private void Rename(AppEntry entry)
@@ -707,6 +784,13 @@ public partial class LaunchpadWindow : Window
 
     private void OnTileUp(object sender, MouseButtonEventArgs e)
     {
+        if (_ignoreGesture)
+        {
+            _ignoreGesture = false;
+            Mouse.Capture(null);
+            return;
+        }
+
         var point = e.GetPosition(this);
         var dx = point.X - _pressPoint.X;
         var dy = point.Y - _pressPoint.Y;
@@ -767,6 +851,21 @@ public partial class LaunchpadWindow : Window
         while (source != null)
         {
             if (type.IsInstanceOfType(source))
+            {
+                return true;
+            }
+
+            source = VisualTreeHelper.GetParent(source);
+        }
+
+        return false;
+    }
+
+    private static bool IsInside(DependencyObject source, DependencyObject target)
+    {
+        while (source != null)
+        {
+            if (ReferenceEquals(source, target))
             {
                 return true;
             }

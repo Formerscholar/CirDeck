@@ -14,6 +14,9 @@ internal static class SettingsTests
             var settings = new AppSettings { Columns = 0, DockMagnifyScale = 9 };
             settings.Clamp();
             TestHost.Check(settings.Columns == 4 && Math.Abs(settings.DockMagnifyScale - 2.2) < 0.001, "clamp");
+            settings.DisplayScreen = "nope";
+            settings.Clamp();
+            TestHost.Check(settings.DisplayScreen == "Cursor", "screen clamp");
 
             settings.Columns = 8;
             settings.DockMagnifyScale = 1.4;
