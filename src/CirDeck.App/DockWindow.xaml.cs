@@ -19,6 +19,7 @@ public partial class DockWindow : Window
     private readonly List<bool> _bins = new();
     private IReadOnlyList<DesktopWindow> _desktop = Array.Empty<DesktopWindow>();
     private bool _cornerReveal;
+    private bool _withLaunchpad;
     private TrayPanelWindow? _tray;
     private readonly System.Windows.Threading.DispatcherTimer _clock = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly List<ScaleTransform> _transforms = new();
@@ -87,7 +88,12 @@ public partial class DockWindow : Window
         ApplyZOrder();
     }
 
-    public bool ShouldStayOpen => _session.Settings.ShowDock && (_session.Settings.KeepDockOnDesktop || !_session.Settings.EnableDockHotCorner || _cornerReveal);
+    public bool ShouldStayOpen => _session.Settings.ShowDock && (_withLaunchpad || _session.Settings.KeepDockOnDesktop || !_session.Settings.EnableDockHotCorner || _cornerReveal);
+
+    public void SetLaunchpadOpen(bool open)
+    {
+        _withLaunchpad = open;
+    }
 
     public void RevealFromCorner()
     {
@@ -250,7 +256,7 @@ public partial class DockWindow : Window
     private void ApplyZOrder()
     {
         var hwnd = new WindowInteropHelper(this).Handle;
-        if (_cornerReveal || !_session.Settings.KeepDockOnDesktop)
+        if (_withLaunchpad || _cornerReveal || !_session.Settings.KeepDockOnDesktop)
         {
             WindowChrome.KeepAbove(hwnd);
             return;

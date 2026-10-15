@@ -14,15 +14,17 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="Transparent" BorderBrush="Transparent" BorderThickness="0" CornerRadius="16" Padding="6,4">
+                        <Border x:Name="Bd" Background="{x:Null}" BorderThickness="0" Padding="6,4">
                             <ContentPresenter HorizontalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="#18FFFFFF"/>
+                                <Setter TargetName="Bd" Property="CornerRadius" Value="16"/>
                             </Trigger>
                             <DataTrigger Binding="{Binding Selected}" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="#2EFFFFFF"/>
+                                <Setter TargetName="Bd" Property="CornerRadius" Value="16"/>
                             </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

@@ -216,6 +216,7 @@ public partial class App : Application
             return;
         }
 
+        _dock.SetLaunchpadOpen(_launchpad.IsVisible);
         if (_dock.ShouldStayOpen)
         {
             _dock.ShowDock();
